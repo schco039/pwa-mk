@@ -155,7 +155,7 @@ function Section({
   )
 }
 
-export function ScheduleView({ events, isCoach }: { events: ScheduleEvent[]; isCoach: boolean }) {
+export function ScheduleView({ events, isCoach, hideTraining = false }: { events: ScheduleEvent[]; isCoach: boolean; hideTraining?: boolean }) {
   const [trainingFilter, setTrainingFilter] = useState<'' | 'FLAG' | 'TACKLE'>('')
 
   useEffect(() => {
@@ -205,13 +205,15 @@ export function ScheduleView({ events, isCoach }: { events: ScheduleEvent[]; isC
 
   return (
     <div className="space-y-8">
-      <Section
-        title="Training"
-        events={trainings}
-        isCoach={isCoach}
-        color="text-blue-400"
-        filter={filterUI}
-      />
+      {!hideTraining && (
+        <Section
+          title="Training"
+          events={trainings}
+          isCoach={isCoach}
+          color="text-blue-400"
+          filter={filterUI}
+        />
+      )}
       <Section
         title="Games"
         events={games}

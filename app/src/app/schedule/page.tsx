@@ -60,7 +60,7 @@ export default async function SchedulePage() {
       <AppNav userName={user.name} role={user.role} />
       <main className="max-w-2xl mx-auto px-4 pt-6 space-y-1">
         <h1 className="font-display text-2xl font-bold text-mk-gold uppercase tracking-widest mb-5">Schedule</h1>
-        <ScheduleView events={serialized} isCoach={user.role !== 'PLAYER'} />
+        <ScheduleView events={serialized} isCoach={user.role !== 'PLAYER'} hideTraining={user.role === 'COACH'} />
       </main>
     </div>
   )

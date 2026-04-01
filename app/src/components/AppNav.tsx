@@ -49,11 +49,12 @@ const playerNavItems: NavItem[] = [
   { href: '/stats', label: 'My Stats', icon: <StatsIcon /> },
 ]
 
-// COACH: limited — only trainings + schedule
+// COACH: limited — trainings, schedule, team stats
 const coachNavItems: NavItem[] = [
   { href: '/dashboard', label: 'Home', icon: <HomeIcon /> },
   { href: '/schedule', label: 'Schedule', icon: <CalendarIcon /> },
   { href: '/coach/trainings', label: 'Trainings', icon: <ClipboardIcon /> },
+  { href: '/coach/stats', label: 'Team', icon: <TeamIcon /> },
 ]
 
 // COMITE: full access
