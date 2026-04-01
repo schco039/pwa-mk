@@ -49,7 +49,15 @@ const playerNavItems: NavItem[] = [
   { href: '/stats', label: 'My Stats', icon: <StatsIcon /> },
 ]
 
+// COACH: limited — only trainings + schedule
 const coachNavItems: NavItem[] = [
+  { href: '/dashboard', label: 'Home', icon: <HomeIcon /> },
+  { href: '/schedule', label: 'Schedule', icon: <CalendarIcon /> },
+  { href: '/coach/trainings', label: 'Trainings', icon: <ClipboardIcon /> },
+]
+
+// COMITE: full access
+const comiteNavItems: NavItem[] = [
   { href: '/dashboard', label: 'Home', icon: <HomeIcon /> },
   { href: '/schedule', label: 'Schedule', icon: <CalendarIcon /> },
   { href: '/coach/events', label: 'Events', icon: <ClipboardIcon /> },
@@ -69,8 +77,9 @@ export function AppNav({ userName, role }: AppNavProps) {
     onSuccess: () => router.push('/login'),
   })
 
-  const isCoach = role === 'COACH' || role === 'COMITE'
-  const navItems = isCoach ? coachNavItems : playerNavItems
+  const navItems = role === 'COMITE' ? comiteNavItems
+    : role === 'COACH' ? coachNavItems
+    : playerNavItems
 
   return (
     <>

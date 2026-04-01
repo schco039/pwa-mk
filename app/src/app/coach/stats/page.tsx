@@ -9,7 +9,7 @@ export default async function CoachStatsPage() {
   const token = cookieStore.get('knights_session')?.value
   if (!token) redirect('/login')
   const user = await validateSession(token)
-  if (!user || user.role === 'PLAYER') redirect('/dashboard')
+  if (!user || user.role !== 'COMITE') redirect('/dashboard')
 
   const since = new Date()
   since.setMonth(since.getMonth() - 3)

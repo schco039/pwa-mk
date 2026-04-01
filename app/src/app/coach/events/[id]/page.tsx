@@ -70,12 +70,14 @@ export default async function CoachEventDetailPage({ params }: { params: Promise
               {event.location && <p className="text-white/50 text-sm">{event.location}</p>}
               {event.notes && <p className="text-white/40 text-sm mt-2">{event.notes}</p>}
             </div>
-            <div className="flex flex-col gap-2 flex-shrink-0">
-              <Link href={`/coach/events/${id}/edit`} className="btn-ghost text-sm py-1.5 px-3">Edit</Link>
-              {event.status !== EventStatus.CANCELLED && (
-                <CancelEventButton eventId={id} />
-              )}
-            </div>
+            {user.role === 'COMITE' && (
+              <div className="flex flex-col gap-2 flex-shrink-0">
+                <Link href={`/coach/events/${id}/edit`} className="btn-ghost text-sm py-1.5 px-3">Edit</Link>
+                {event.status !== EventStatus.CANCELLED && (
+                  <CancelEventButton eventId={id} />
+                )}
+              </div>
+            )}
           </div>
         </div>
 

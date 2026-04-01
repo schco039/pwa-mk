@@ -10,7 +10,7 @@ export default async function NewEventPage() {
   const token = cookieStore.get('knights_session')?.value
   if (!token) redirect('/login')
   const user = await validateSession(token)
-  if (!user || user.role === 'PLAYER') redirect('/dashboard')
+  if (!user || user.role !== 'COMITE') redirect('/dashboard')
 
   const teams = await prisma.team.findMany({ orderBy: { name: 'asc' } })
 

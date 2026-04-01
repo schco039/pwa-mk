@@ -12,7 +12,7 @@ export default async function BulkEventsPage() {
   const token = cookieStore.get('knights_session')?.value
   if (!token) redirect('/login')
   const user = await validateSession(token)
-  if (!user || user.role === 'PLAYER') redirect('/dashboard')
+  if (!user || user.role !== 'COMITE') redirect('/dashboard')
 
   const events = await prisma.event.findMany({
     where: {

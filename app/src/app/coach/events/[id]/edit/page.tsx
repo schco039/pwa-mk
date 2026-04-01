@@ -12,7 +12,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
   const token = cookieStore.get('knights_session')?.value
   if (!token) redirect('/login')
   const user = await validateSession(token)
-  if (!user || user.role === 'PLAYER') redirect('/dashboard')
+  if (!user || user.role !== 'COMITE') redirect('/dashboard')
 
   const [event, teams] = await Promise.all([
     prisma.event.findUnique({ where: { id } }),
