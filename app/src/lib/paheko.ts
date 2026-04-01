@@ -1,11 +1,12 @@
 import { type Role } from '@prisma/client'
 
+// Actual Paheko API response shape for user/category endpoint
 interface PahekoMember {
   id: number
-  nom: string
-  prenom?: string
+  numero?: string
+  nom: string        // full name (Paheko stores as single field)
   email: string
-  id_category: number
+  category: string   // category name, e.g. "Membres actifs"
   telephone?: string
 }
 
@@ -17,12 +18,17 @@ interface NormalizedUser {
   phone: string | null
 }
 
-function getRoleMap(): Record<number, Role> {
-  const raw = process.env.PAHEKO_ROLE_MAP ?? '1:PLAYER,2:COACH,3:COMITE'
-  const map: Record<number, Role> = {}
+// PAHEKO_ROLE_MAP maps category NAME to role, e.g.:
+// "Membres actifs:PLAYER,Administrateurs:COMITE,Entraîneurs:COACH"
+function getRoleMap(): Record<string, Role> {
+  const raw = process.env.PAHEKO_ROLE_MAP ?? 'Membres actifs:PLAYER,Administrateurs:COMITE'
+  const map: Record<string, Role> = {}
   for (const part of raw.split(',')) {
-    const [catId, role] = part.trim().split(':')
-    if (catId && role) map[parseInt(catId)] = role as Role
+    const idx = part.indexOf(':')
+    if (idx < 1) continue
+    const catName = part.slice(0, idx).trim()
+    const role = part.slice(idx + 1).trim()
+    if (catName && role) map[catName] = role as Role
   }
   return map
 }
@@ -43,7 +49,6 @@ async function pahekoGet<T>(path: string): Promise<T> {
       Authorization: getBasicAuthHeader(),
       Accept: 'application/json',
     },
-    // Don't cache — always fetch fresh user data
     cache: 'no-store',
   })
 
@@ -55,25 +60,30 @@ function normalize(m: PahekoMember): NormalizedUser {
   const roleMap = getRoleMap()
   return {
     pahekoId: m.id,
-    name: [m.prenom, m.nom].filter(Boolean).join(' '),
+    name: m.nom,
     email: m.email,
-    role: roleMap[m.id_category] ?? 'PLAYER',
+    role: roleMap[m.category] ?? 'PLAYER',
     phone: m.telephone ?? null,
   }
+}
+
+// Cache all members for short period to avoid repeated API calls
+let membersCache: { data: PahekoMember[]; fetchedAt: number } | null = null
+const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+
+async function getAllMembers(): Promise<PahekoMember[]> {
+  if (membersCache && Date.now() - membersCache.fetchedAt < CACHE_TTL) {
+    return membersCache.data
+  }
+  const data = await pahekoGet<PahekoMember[]>('user/category')
+  membersCache = { data, fetchedAt: Date.now() }
+  return data
 }
 
 /** Look up a single member by email in Paheko */
 export async function findPahekoUserByEmail(email: string): Promise<NormalizedUser | null> {
   try {
-    // Paheko API: search members — endpoint may vary by version
-    const data = await pahekoGet<{ results?: PahekoMember[]; list?: PahekoMember[] } | PahekoMember[]>(
-      `user/search?q=${encodeURIComponent(email)}`,
-    )
-
-    const members: PahekoMember[] = Array.isArray(data)
-      ? data
-      : (data.results ?? data.list ?? [])
-
+    const members = await getAllMembers()
     const match = members.find((m) => m.email?.toLowerCase() === email.toLowerCase())
     return match ? normalize(match) : null
   } catch (err) {
@@ -85,13 +95,7 @@ export async function findPahekoUserByEmail(email: string): Promise<NormalizedUs
 /** Fetch all members from Paheko for periodic sync */
 export async function fetchAllPahekoUsers(): Promise<NormalizedUser[]> {
   try {
-    const data = await pahekoGet<{ results?: PahekoMember[]; list?: PahekoMember[] } | PahekoMember[]>(
-      'user/list',
-    )
-    const members: PahekoMember[] = Array.isArray(data)
-      ? data
-      : (data.results ?? data.list ?? [])
-
+    const members = await getAllMembers()
     return members.filter((m) => m.email).map(normalize)
   } catch (err) {
     console.error('[paheko] fetchAll failed:', err)
