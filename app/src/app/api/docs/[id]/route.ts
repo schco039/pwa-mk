@@ -42,5 +42,5 @@ export async function GET(
   // Prevent caching of sensitive docs
   headers.set('Cache-Control', 'private, no-store')
 
-  return new NextResponse(buffer, { headers })
+  return new NextResponse(new Uint8Array(buffer), { headers })
 }
