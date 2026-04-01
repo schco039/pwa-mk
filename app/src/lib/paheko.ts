@@ -1,18 +1,12 @@
 import { type Role } from '@prisma/client'
 
-// Shape returned by user/category (list endpoint)
-interface PahekoMemberSummary {
+// Shape returned by user/category — includes custom fields directly
+interface PahekoMember {
   id: number
   nom: string
   email: string
   category: string
   telephone?: string
-}
-
-// Shape returned by user/{id} (full profile with custom fields)
-interface PahekoMemberFull extends PahekoMemberSummary {
-  id_category: number
-  numero?: number | string | null
   player_app_role?: string | null  // custom field: PLAYER | COACH | COMITE
   jersey?: number | string | null  // custom field: jersey number
 }
@@ -54,7 +48,7 @@ function normalizeRole(raw: string | null | undefined): Role | null {
   return VALID_ROLES.includes(upper) ? upper : null
 }
 
-function normalize(m: PahekoMemberFull): NormalizedUser {
+function normalize(m: PahekoMember): NormalizedUser {
   return {
     pahekoId: m.id,
     name: m.nom,
@@ -65,55 +59,36 @@ function normalize(m: PahekoMemberFull): NormalizedUser {
   }
 }
 
-// Short-lived cache for the member list (avoid hammering Paheko on every login)
-let membersCache: { data: PahekoMemberSummary[]; fetchedAt: number } | null = null
+// Short-lived cache (avoid hammering Paheko on every login)
+let membersCache: { data: PahekoMember[]; fetchedAt: number } | null = null
 const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 
-async function getAllMembers(): Promise<PahekoMemberSummary[]> {
+async function getAllMembers(): Promise<PahekoMember[]> {
   if (membersCache && Date.now() - membersCache.fetchedAt < CACHE_TTL) {
     return membersCache.data
   }
-  const data = await pahekoGet<PahekoMemberSummary[]>('user/category')
+  const data = await pahekoGet<PahekoMember[]>('user/category')
   membersCache = { data, fetchedAt: Date.now() }
   return data
 }
 
-async function getMemberFull(id: number): Promise<PahekoMemberFull> {
-  return pahekoGet<PahekoMemberFull>(`user/${id}`)
-}
-
-/** Look up a single member by email — fetches full profile for custom fields */
+/** Look up a single member by email in Paheko */
 export async function findPahekoUserByEmail(email: string): Promise<NormalizedUser | null> {
   try {
     const members = await getAllMembers()
     const match = members.find((m) => m.email?.toLowerCase() === email.toLowerCase())
-    if (!match) return null
-    // Fetch full profile to get player_app_role and jersey
-    const full = await getMemberFull(match.id)
-    return normalize({ ...full, category: match.category })
+    return match ? normalize(match) : null
   } catch (err) {
     console.error('[paheko] findByEmail failed:', err)
     return null
   }
 }
 
-/** Fetch all members from Paheko with full profiles (for sync) */
+/** Fetch all members from Paheko (for bulk sync) */
 export async function fetchAllPahekoUsers(): Promise<NormalizedUser[]> {
   try {
     const members = await getAllMembers()
-    const results = await Promise.all(
-      members
-        .filter((m) => m.email)
-        .map(async (m) => {
-          try {
-            const full = await getMemberFull(m.id)
-            return normalize({ ...full, category: m.category })
-          } catch {
-            return null
-          }
-        })
-    )
-    return results.filter((u): u is NormalizedUser => u !== null)
+    return members.filter((m) => m.email).map(normalize)
   } catch (err) {
     console.error('[paheko] fetchAll failed:', err)
     return []
