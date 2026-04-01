@@ -4,15 +4,15 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 import { useRouter } from 'next/navigation'
-import { format, addWeeks, startOfWeek, isWithinInterval, parseISO, isPast } from 'date-fns'
+import { format } from 'date-fns'
 
 type RsvpStatus = 'YES' | 'NO' | 'MAYBE'
 
-interface Event {
+export interface ScheduleEvent {
   id: string
   type: string
   title: string
-  date: string // ISO string
+  date: string // ISO string from server
   startTime: string
   endTime: string | null
   location: string | null
@@ -28,70 +28,65 @@ interface Event {
   myRsvp: RsvpStatus | null
 }
 
-interface ScheduleViewProps {
-  events: Event[]
-  isCoach: boolean
-}
-
 const PREF_KEY = 'knights_training_filter'
-const WEEKS_STEP = 3
+const DEFAULT_SHOW = 3
 
-const typeColor: Record<string, string> = {
-  GAME: 'text-mk-gold border-mk-gold/40',
-  TRAINING: 'text-blue-400 border-blue-400/30',
-  EVENT: 'text-purple-400 border-purple-400/30',
+// Category badge component
+function CategoryBadge({ category }: { category: string | null }) {
+  if (!category) return null
+  return (
+    <span className={`text-xs border rounded px-1.5 py-0.5 ${
+      category === 'FLAG' ? 'text-orange-400 border-orange-400/30' : 'text-blue-400 border-blue-400/30'
+    }`}>
+      {category === 'FLAG' ? '🏴 Flag' : '🏈 Tackle'}
+    </span>
+  )
 }
 
-function RsvpButtons({ event, currentStatus }: { event: Event; currentStatus: RsvpStatus | null }) {
+function RsvpButtons({ event }: { event: ScheduleEvent }) {
   const router = useRouter()
   const setRsvp = trpc.rsvp.set.useMutation({ onSuccess: () => router.refresh() })
-
   const options = [
-    { status: 'YES' as const, label: "Coming", className: 'bg-green-600 hover:bg-green-500' },
-    { status: 'NO' as const, label: "Can't", className: 'bg-red-700/80 hover:bg-red-600' },
-    ...(event.allowMaybe ? [{ status: 'MAYBE' as const, label: 'Maybe', className: 'bg-white/10 hover:bg-white/20' }] : []),
+    { status: 'YES' as const, label: "Coming", base: 'bg-green-600 hover:bg-green-500' },
+    { status: 'NO' as const, label: "Can't", base: 'bg-red-700/80 hover:bg-red-600' },
+    ...(event.allowMaybe ? [{ status: 'MAYBE' as const, label: 'Maybe', base: 'bg-white/10 hover:bg-white/20' }] : []),
   ]
-
   return (
-    <div className="flex gap-1.5">
+    <div className="flex gap-1.5 flex-wrap">
       {options.map((opt) => (
-        <button
-          key={opt.status}
+        <button key={opt.status}
           onClick={() => setRsvp.mutate({ eventId: event.id, status: opt.status })}
           disabled={setRsvp.isPending}
-          className={`px-3 py-1.5 rounded-lg text-xs font-display uppercase tracking-wide text-white transition-all ${opt.className} ${
-            currentStatus === opt.status ? 'ring-2 ring-mk-gold ring-offset-1 ring-offset-mk-navy font-bold opacity-100' : 'opacity-60'
+          className={`px-3 py-1.5 rounded-lg text-xs font-display uppercase tracking-wide text-white transition-all ${opt.base} ${
+            event.myRsvp === opt.status ? 'ring-2 ring-mk-gold ring-offset-1 ring-offset-mk-navy opacity-100 font-bold' : 'opacity-60'
           }`}
-        >
-          {opt.label}
-        </button>
+        >{opt.label}</button>
       ))}
     </div>
   )
 }
 
-function EventCard({ event, isCoach }: { event: Event; isCoach: boolean }) {
+function EventCard({ event, isCoach }: { event: ScheduleEvent; isCoach: boolean }) {
   const date = new Date(event.date)
-  const past = isPast(date)
-  const categoryLabel = event.category === 'FLAG' ? '🏴 Flag' : event.category === 'TACKLE' ? '🏈 Tackle' : null
+  const isPast = date < new Date()
+  const isCancelled = event.status === 'CANCELLED'
+
+  const displayTitle = event.type === 'GAME' && event.opponent
+    ? `${event.homeAway === 'HOME' ? 'vs' : '@'} ${event.opponent}`
+    : event.title
 
   return (
-    <div className={`card space-y-2 ${past ? 'opacity-50' : ''}`}>
+    <div className={`card space-y-2 ${isPast || isCancelled ? 'opacity-50' : ''}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
+          {/* Badges row */}
           <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-            <span className={`text-xs uppercase tracking-widest border rounded px-1.5 py-0.5 ${typeColor[event.type]}`}>
-              {event.type === 'TRAINING' && categoryLabel ? categoryLabel : event.type}
-            </span>
-            {event.status === 'CANCELLED' && (
-              <span className="text-xs uppercase border rounded px-1.5 py-0.5 text-red-400 border-red-400/30">Cancelled</span>
+            <CategoryBadge category={event.category} />
+            {isCancelled && (
+              <span className="text-xs border rounded px-1.5 py-0.5 text-red-400 border-red-400/30">Cancelled</span>
             )}
           </div>
-          <p className="text-white font-semibold text-sm">
-            {event.type === 'GAME' && event.opponent
-              ? `${event.homeAway === 'HOME' ? 'vs' : '@'} ${event.opponent}`
-              : event.title}
-          </p>
+          <p className="text-white font-semibold text-sm">{displayTitle}</p>
           <p className="text-white/50 text-xs mt-0.5">
             {format(date, 'EEE d MMM')} · {event.startTime}
             {event.endTime && `–${event.endTime}`}
@@ -102,29 +97,67 @@ function EventCard({ event, isCoach }: { event: Event; isCoach: boolean }) {
             )}
           </p>
           {event.location && <p className="text-white/30 text-xs">{event.location}</p>}
-          {event.status === 'CANCELLED' && event.cancelReason && (
+          {isCancelled && event.cancelReason && (
             <p className="text-red-400/60 text-xs mt-1">Reason: {event.cancelReason}</p>
           )}
         </div>
         {isCoach && (
-          <Link href={`/coach/events/${event.id}`} className="text-white/20 hover:text-mk-gold text-xs flex-shrink-0">
+          <Link href={`/coach/events/${event.id}`} className="text-white/20 hover:text-mk-gold text-xs flex-shrink-0 transition-colors">
             Manage
           </Link>
         )}
       </div>
-
-      {!past && event.status !== 'CANCELLED' && (
-        <RsvpButtons event={event} currentStatus={event.myRsvp} />
-      )}
+      {!isPast && !isCancelled && <RsvpButtons event={event} />}
     </div>
   )
 }
 
-export function ScheduleView({ events, isCoach }: ScheduleViewProps) {
-  const [trainingFilter, setTrainingFilter] = useState<'' | 'FLAG' | 'TACKLE'>('')
-  const [weeksShown, setWeeksShown] = useState(WEEKS_STEP)
+function Section({
+  title,
+  events,
+  isCoach,
+  color,
+  filter,
+}: {
+  title: string
+  events: ScheduleEvent[]
+  isCoach: boolean
+  color: string
+  filter?: React.ReactNode
+}) {
+  const [shown, setShown] = useState(DEFAULT_SHOW)
+  const visible = events.slice(0, shown)
+  const hasMore = events.length > shown
 
-  // Load saved preference
+  return (
+    <section>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className={`font-display text-lg font-bold uppercase tracking-widest ${color}`}>{title}</h2>
+        {filter}
+      </div>
+
+      {events.length === 0 ? (
+        <div className="card text-white/30 text-sm">None scheduled.</div>
+      ) : (
+        <div className="space-y-2">
+          {visible.map((e) => <EventCard key={e.id} event={e} isCoach={isCoach} />)}
+          {hasMore && (
+            <button
+              onClick={() => setShown((s) => s + DEFAULT_SHOW)}
+              className="w-full py-2 rounded-lg border border-white/10 text-white/40 text-xs font-display uppercase tracking-wide hover:border-white/30 hover:text-white/60 transition-colors"
+            >
+              Show more ({events.length - shown} remaining)
+            </button>
+          )}
+        </div>
+      )}
+    </section>
+  )
+}
+
+export function ScheduleView({ events, isCoach }: { events: ScheduleEvent[]; isCoach: boolean }) {
+  const [trainingFilter, setTrainingFilter] = useState<'' | 'FLAG' | 'TACKLE'>('')
+
   useEffect(() => {
     const saved = localStorage.getItem(PREF_KEY)
     if (saved === 'FLAG' || saved === 'TACKLE') setTrainingFilter(saved)
@@ -136,102 +169,61 @@ export function ScheduleView({ events, isCoach }: ScheduleViewProps) {
   }
 
   const now = new Date()
-  const cutoff = addWeeks(now, weeksShown)
 
-  // Filter events
-  const filtered = events.filter((e) => {
-    const date = new Date(e.date)
-    // Apply training category filter
-    if (e.type === 'TRAINING' && trainingFilter !== '') {
-      // If event has a category, it must match. If no category (null = both), always show.
-      if (e.category && e.category !== trainingFilter) return false
-    }
-    return true
+  // Sort upcoming first, then by date ascending — fix for out-of-order display
+  const upcoming = [...events]
+    .filter((e) => new Date(e.date) >= now)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+
+  const trainings = upcoming.filter((e) => {
+    if (e.type !== 'TRAINING') return false
+    if (trainingFilter === '') return true
+    // If event has no category (= both), always include. If it has one, must match.
+    return !e.category || e.category === trainingFilter
   })
 
-  const upcoming = filtered.filter((e) => {
-    const date = new Date(e.date)
-    return date >= now && date <= cutoff
-  })
+  const games = upcoming.filter((e) => e.type === 'GAME')
+  const otherEvents = upcoming.filter((e) => e.type === 'EVENT')
 
-  const hasMore = filtered.some((e) => new Date(e.date) > cutoff)
-
-  // Group upcoming by week
-  const byWeek = new Map<string, Event[]>()
-  for (const event of upcoming) {
-    const weekStart = startOfWeek(new Date(event.date), { weekStartsOn: 1 })
-    const key = format(weekStart, 'yyyy-MM-dd')
-    if (!byWeek.has(key)) byWeek.set(key, [])
-    byWeek.get(key)!.push(event)
-  }
-
-  const past = filtered.filter((e) => new Date(e.date) < now).slice(0, 5)
+  const filterUI = (
+    <div className="flex gap-1.5">
+      {([
+        { v: '' as const, l: 'All' },
+        { v: 'FLAG' as const, l: '🏴' },
+        { v: 'TACKLE' as const, l: '🏈' },
+      ]).map((opt) => (
+        <button key={opt.v} onClick={() => setFilter(opt.v)}
+          className={`px-2.5 py-1 rounded-lg text-xs font-display uppercase tracking-wide border transition-colors ${
+            trainingFilter === opt.v
+              ? 'bg-mk-gold text-mk-navy border-mk-gold'
+              : 'text-white/40 border-white/20 hover:border-white/40'
+          }`}
+        >{opt.l}</button>
+      ))}
+    </div>
+  )
 
   return (
-    <div className="space-y-5">
-      {/* Training type filter */}
-      <div>
-        <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Training Filter</p>
-        <div className="flex gap-2">
-          {([
-            { value: '' as const, label: 'All' },
-            { value: 'FLAG' as const, label: '🏴 Flag Football' },
-            { value: 'TACKLE' as const, label: '🏈 Tackle Football' },
-          ]).map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setFilter(opt.value)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-display uppercase tracking-wide transition-colors border ${
-                trainingFilter === opt.value
-                  ? 'bg-mk-gold text-mk-navy border-mk-gold'
-                  : 'text-white/50 border-white/20 hover:border-white/40'
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Upcoming events grouped by week */}
-      {byWeek.size === 0 && (
-        <div className="card text-white/40 text-sm">No upcoming events in the next {weeksShown} weeks.</div>
-      )}
-
-      {Array.from(byWeek.entries()).map(([weekKey, weekEvents]) => {
-        const weekStart = new Date(weekKey)
-        const weekEnd = addWeeks(weekStart, 1)
-        return (
-          <section key={weekKey}>
-            <h2 className="font-display text-xs uppercase tracking-widest text-white/30 mb-2">
-              Week of {format(weekStart, 'd MMM')}
-            </h2>
-            <div className="space-y-2">
-              {weekEvents.map((e) => <EventCard key={e.id} event={e} isCoach={isCoach} />)}
-            </div>
-          </section>
-        )
-      })}
-
-      {/* Load more */}
-      {hasMore && (
-        <button
-          onClick={() => setWeeksShown((w) => w + WEEKS_STEP)}
-          className="btn-ghost w-full text-sm"
-        >
-          Show {WEEKS_STEP} more weeks
-        </button>
-      )}
-
-      {/* Recent past (last 5) */}
-      {past.length > 0 && (
-        <section>
-          <h2 className="font-display text-xs uppercase tracking-widest text-white/30 mb-2">Recent</h2>
-          <div className="space-y-2">
-            {past.map((e) => <EventCard key={e.id} event={e} isCoach={isCoach} />)}
-          </div>
-        </section>
-      )}
+    <div className="space-y-8">
+      <Section
+        title="Training"
+        events={trainings}
+        isCoach={isCoach}
+        color="text-blue-400"
+        filter={filterUI}
+      />
+      <Section
+        title="Games"
+        events={games}
+        isCoach={isCoach}
+        color="text-mk-gold"
+      />
+      <Section
+        title="Events"
+        events={otherEvents}
+        isCoach={isCoach}
+        color="text-purple-400"
+      />
     </div>
   )
 }
