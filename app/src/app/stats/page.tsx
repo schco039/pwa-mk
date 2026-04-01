@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { validateSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { AppNav } from '@/components/AppNav'
+import { AbsenceManager } from '@/components/AbsenceManager'
 import { format } from 'date-fns'
 import { createHmac } from 'crypto'
 
@@ -94,6 +95,13 @@ export default async function StatsPage() {
               Abonnieren
             </a>
           </div>
+        </div>
+
+        {/* Absences */}
+        <div className="card space-y-2">
+          <h2 className="font-display text-sm uppercase tracking-widest text-white/40 mb-2">Abwesenheiten</h2>
+          <p className="text-white/50 text-xs mb-3">Trag deine Abwesenheitszeiträume ein (Urlaub, Verletzung…). Coach und Comité sehen das pro Event.</p>
+          <AbsenceManager />
         </div>
 
         {/* History */}

@@ -7,6 +7,7 @@ import { AppNav } from '@/components/AppNav'
 import { AttendanceForm } from '@/components/AttendanceForm'
 import { CancelEventButton } from '@/components/CancelEventButton'
 import { EventMessaging } from '@/components/EventMessaging'
+import { EventAbsences } from '@/components/EventAbsences'
 import { EventStatus } from '@prisma/client'
 import { format, isPast } from 'date-fns'
 
@@ -155,6 +156,14 @@ export default async function CoachEventDetailPage({ params }: { params: Promise
               </div>
             )}
           </div>
+        </div>
+
+        {/* Absences */}
+        <div className="card">
+          <h2 className="font-display text-lg font-semibold text-mk-gold mb-4 uppercase tracking-wide">
+            Abwesenheiten
+          </h2>
+          <EventAbsences eventId={id} />
         </div>
 
         {/* Messaging */}

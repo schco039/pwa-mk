@@ -61,6 +61,7 @@ model User {
   rsvps           Rsvp[]
   attendances     Attendance[]
   sentMessages    EventMessage[]
+  absences        Absence[]
   createdAt       DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
 }
@@ -170,6 +171,19 @@ model EventMessage {
   sentAt    DateTime @default(now())
 
   @@index([eventId])
+}
+
+model Absence {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  from      DateTime
+  to        DateTime
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([from, to])
 }
 
 model PushSubscription {

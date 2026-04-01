@@ -6,6 +6,7 @@ import { attendanceRouter } from './attendance'
 import { pushRouter } from './push'
 import { teamsRouter } from './teams'
 import { messagesRouter } from './messages'
+import { absencesRouter } from './absences'
 
 export const appRouter = router({
   auth: authRouter,
@@ -15,6 +16,7 @@ export const appRouter = router({
   push: pushRouter,
   teams: teamsRouter,
   messages: messagesRouter,
+  absences: absencesRouter,
 })
 
 export type AppRouter = typeof appRouter
