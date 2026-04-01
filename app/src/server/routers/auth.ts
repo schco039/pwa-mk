@@ -16,16 +16,17 @@ export const authRouter = router({
       // 1. Check if user already exists locally (synced from Paheko or seeded)
       const existingUser = await ctx.prisma.user.findUnique({ where: { email } })
 
+      // Always sync from Paheko to pick up role/jersey changes
+      const pahekoUser = await findPahekoUserByEmail(email)
+
       if (!existingUser) {
-        // 2. Not found locally — look up in Paheko
-        const pahekoUser = await findPahekoUserByEmail(email)
+        // 2. Not found locally — must exist in Paheko
         if (!pahekoUser) {
           throw new TRPCError({
             code: 'NOT_FOUND',
             message: 'Email not registered. Contact your team admin.',
           })
         }
-        // Create local record from Paheko data
         await ctx.prisma.user.create({
           data: {
             email,
@@ -33,6 +34,18 @@ export const authRouter = router({
             name: pahekoUser.name,
             role: pahekoUser.role,
             phone: pahekoUser.phone,
+            jerseyNumber: pahekoUser.jerseyNumber,
+          },
+        })
+      } else if (pahekoUser) {
+        // Sync role, jersey and name changes from Paheko on every login
+        await ctx.prisma.user.update({
+          where: { email },
+          data: {
+            name: pahekoUser.name,
+            role: pahekoUser.role,
+            phone: pahekoUser.phone,
+            jerseyNumber: pahekoUser.jerseyNumber,
           },
         })
       }

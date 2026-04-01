@@ -1,13 +1,20 @@
 import { type Role } from '@prisma/client'
 
-// Actual Paheko API response shape for user/category endpoint
-interface PahekoMember {
+// Shape returned by user/category (list endpoint)
+interface PahekoMemberSummary {
   id: number
-  numero?: string
-  nom: string        // full name (Paheko stores as single field)
+  nom: string
   email: string
-  category: string   // category name, e.g. "Membres actifs"
+  category: string
   telephone?: string
+}
+
+// Shape returned by user/{id} (full profile with custom fields)
+interface PahekoMemberFull extends PahekoMemberSummary {
+  id_category: number
+  numero?: number | string | null
+  player_app_role?: string | null  // custom field: PLAYER | COACH | COMITE
+  jersey?: number | string | null  // custom field: jersey number
 }
 
 interface NormalizedUser {
@@ -16,22 +23,10 @@ interface NormalizedUser {
   email: string
   role: Role
   phone: string | null
+  jerseyNumber: number | null
 }
 
-// PAHEKO_ROLE_MAP maps category NAME to role, e.g.:
-// "Membres actifs:PLAYER,Administrateurs:COMITE,Entraîneurs:COACH"
-function getRoleMap(): Record<string, Role> {
-  const raw = process.env.PAHEKO_ROLE_MAP ?? 'Membres actifs:PLAYER,Administrateurs:COMITE'
-  const map: Record<string, Role> = {}
-  for (const part of raw.split(',')) {
-    const idx = part.indexOf(':')
-    if (idx < 1) continue
-    const catName = part.slice(0, idx).trim()
-    const role = part.slice(idx + 1).trim()
-    if (catName && role) map[catName] = role as Role
-  }
-  return map
-}
+const VALID_ROLES: Role[] = ['PLAYER', 'COACH', 'COMITE']
 
 function getBasicAuthHeader(): string {
   const user = process.env.PAHEKO_API_USER
@@ -45,10 +40,7 @@ async function pahekoGet<T>(path: string): Promise<T> {
   if (!base) throw new Error('PAHEKO_URL not configured')
 
   const res = await fetch(`${base}/api/${path}`, {
-    headers: {
-      Authorization: getBasicAuthHeader(),
-      Accept: 'application/json',
-    },
+    headers: { Authorization: getBasicAuthHeader(), Accept: 'application/json' },
     cache: 'no-store',
   })
 
@@ -56,47 +48,72 @@ async function pahekoGet<T>(path: string): Promise<T> {
   return res.json() as Promise<T>
 }
 
-function normalize(m: PahekoMember): NormalizedUser {
-  const roleMap = getRoleMap()
+function normalizeRole(raw: string | null | undefined): Role {
+  if (!raw) return 'PLAYER'
+  const upper = raw.trim().toUpperCase() as Role
+  return VALID_ROLES.includes(upper) ? upper : 'PLAYER'
+}
+
+function normalize(m: PahekoMemberFull): NormalizedUser {
   return {
     pahekoId: m.id,
     name: m.nom,
     email: m.email,
-    role: roleMap[m.category] ?? 'PLAYER',
+    role: normalizeRole(m.player_app_role),
     phone: m.telephone ?? null,
+    jerseyNumber: m.jersey != null ? parseInt(String(m.jersey)) || null : null,
   }
 }
 
-// Cache all members for short period to avoid repeated API calls
-let membersCache: { data: PahekoMember[]; fetchedAt: number } | null = null
+// Short-lived cache for the member list (avoid hammering Paheko on every login)
+let membersCache: { data: PahekoMemberSummary[]; fetchedAt: number } | null = null
 const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 
-async function getAllMembers(): Promise<PahekoMember[]> {
+async function getAllMembers(): Promise<PahekoMemberSummary[]> {
   if (membersCache && Date.now() - membersCache.fetchedAt < CACHE_TTL) {
     return membersCache.data
   }
-  const data = await pahekoGet<PahekoMember[]>('user/category')
+  const data = await pahekoGet<PahekoMemberSummary[]>('user/category')
   membersCache = { data, fetchedAt: Date.now() }
   return data
 }
 
-/** Look up a single member by email in Paheko */
+async function getMemberFull(id: number): Promise<PahekoMemberFull> {
+  return pahekoGet<PahekoMemberFull>(`user/${id}`)
+}
+
+/** Look up a single member by email — fetches full profile for custom fields */
 export async function findPahekoUserByEmail(email: string): Promise<NormalizedUser | null> {
   try {
     const members = await getAllMembers()
     const match = members.find((m) => m.email?.toLowerCase() === email.toLowerCase())
-    return match ? normalize(match) : null
+    if (!match) return null
+    // Fetch full profile to get player_app_role and jersey
+    const full = await getMemberFull(match.id)
+    return normalize({ ...full, category: match.category })
   } catch (err) {
     console.error('[paheko] findByEmail failed:', err)
     return null
   }
 }
 
-/** Fetch all members from Paheko for periodic sync */
+/** Fetch all members from Paheko with full profiles (for sync) */
 export async function fetchAllPahekoUsers(): Promise<NormalizedUser[]> {
   try {
     const members = await getAllMembers()
-    return members.filter((m) => m.email).map(normalize)
+    const results = await Promise.all(
+      members
+        .filter((m) => m.email)
+        .map(async (m) => {
+          try {
+            const full = await getMemberFull(m.id)
+            return normalize({ ...full, category: m.category })
+          } catch {
+            return null
+          }
+        })
+    )
+    return results.filter((u): u is NormalizedUser => u !== null)
   } catch (err) {
     console.error('[paheko] fetchAll failed:', err)
     return []
