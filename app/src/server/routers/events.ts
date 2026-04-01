@@ -119,6 +119,43 @@ export const eventsRouter = router({
       })
     }),
 
+  /** Bulk delete events (Coach+) */
+  bulkDelete: coachProcedure
+    .input(z.object({ ids: z.array(z.string()).min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const { count } = await ctx.prisma.event.deleteMany({
+        where: { id: { in: input.ids } },
+      })
+      return { deleted: count }
+    }),
+
+  /** Bulk update events (Coach+) — only provided fields are changed */
+  bulkUpdate: coachProcedure
+    .input(
+      z.object({
+        ids: z.array(z.string()).min(1),
+        startTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+        endTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+        location: z.string().optional(),
+        category: z.enum(['FLAG', 'TACKLE']).nullable().optional(),
+        notes: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { ids, ...data } = input
+      const patch: Record<string, unknown> = {}
+      if (data.startTime !== undefined) patch.startTime = data.startTime
+      if (data.endTime !== undefined) patch.endTime = data.endTime
+      if (data.location !== undefined) patch.location = data.location
+      if (data.category !== undefined) patch.category = data.category
+      if (data.notes !== undefined) patch.notes = data.notes
+      const { count } = await ctx.prisma.event.updateMany({
+        where: { id: { in: ids } },
+        data: patch,
+      })
+      return { updated: count }
+    }),
+
   /** Cancel an event (Coach+) */
   cancel: coachProcedure
     .input(z.object({ id: z.string(), reason: z.string().optional() }))

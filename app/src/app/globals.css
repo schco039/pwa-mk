@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Safe area + dynamic viewport for iOS/iPad */
+:root {
+  --nav-height: calc(56px + env(safe-area-inset-bottom, 0px));
+}
+
 @layer base {
   :root {
     --mk-navy: #1b2a4a;

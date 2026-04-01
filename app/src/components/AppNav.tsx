@@ -95,8 +95,11 @@ export function AppNav({ userName, role }: AppNavProps) {
         </div>
       </header>
 
-      {/* Bottom nav */}
-      <nav className="fixed bottom-0 inset-x-0 z-50 bg-mk-navy border-t border-white/10">
+      {/* Bottom nav — fixed with safe-area for iOS/iPad */}
+      <nav
+        className="fixed bottom-0 inset-x-0 z-50 bg-mk-navy border-t border-white/10"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      >
         <div className="max-w-2xl mx-auto flex">
           {navItems.map((item) => {
             const active = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))

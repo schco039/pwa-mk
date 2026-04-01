@@ -97,7 +97,7 @@ export function EventForm({ teams = [], initial }: EventFormProps) {
       isPublic: form.isPublic,
       isTemplate: form.isTemplate,
       allowMaybe: form.allowMaybe,
-      category: form.type === 'TRAINING' && form.category ? (form.category as 'FLAG' | 'TACKLE') : undefined,
+      category: (form.type === 'TRAINING' || form.type === 'GAME') && form.category ? (form.category as 'FLAG' | 'TACKLE') : undefined,
     }
 
     if (isEdit) {
@@ -287,8 +287,8 @@ export function EventForm({ teams = [], initial }: EventFormProps) {
         />
       </div>
 
-      {/* Training category */}
-      {form.type === 'TRAINING' && (
+      {/* Training / Game category */}
+      {(form.type === 'TRAINING' || form.type === 'GAME') && (
         <div>
           <label className="block text-white/60 text-sm mb-2 uppercase tracking-wide">Training Type</label>
           <div className="flex gap-2">

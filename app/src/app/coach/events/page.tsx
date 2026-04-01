@@ -50,12 +50,15 @@ export default async function CoachEventsPage() {
   }
 
   return (
-    <div className="min-h-screen pb-28">
+    <div className="min-h-[100dvh] pb-[calc(7rem+env(safe-area-inset-bottom,0px))]">
       <AppNav userName={user.name} role={user.role} />
       <main className="max-w-2xl mx-auto px-4 pt-6 space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="font-display text-2xl font-bold text-mk-gold uppercase tracking-widest">Events</h1>
-          <Link href="/coach/events/new" className="btn-primary text-sm py-2">+ New</Link>
+          <div className="flex gap-2">
+            <Link href="/coach/events/bulk" className="btn-ghost text-sm py-2">Bulk edit</Link>
+            <Link href="/coach/events/new" className="btn-primary text-sm py-2">+ New</Link>
+          </div>
         </div>
 
         <section className="space-y-2">
