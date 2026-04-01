@@ -154,7 +154,7 @@ export default async function DashboardPage() {
             <span className="font-display text-sm uppercase tracking-wide text-mk-gold">My Stats</span>
             <span className="text-white/40 text-xs">Attendance history</span>
           </Link>
-          {user.role !== 'PLAYER' && (
+          {user.role === 'COMITE' && (
             <Link href="/coach/events/new" className="card flex flex-col gap-1 hover:border-mk-gold/40 transition-colors col-span-2">
               <span className="font-display text-sm uppercase tracking-wide text-mk-gold">+ Create Event</span>
               <span className="text-white/40 text-xs">Add training, game or event</span>
