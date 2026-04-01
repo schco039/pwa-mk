@@ -8,6 +8,9 @@ import { AttendanceForm } from '@/components/AttendanceForm'
 import { CancelEventButton } from '@/components/CancelEventButton'
 import { EventMessaging } from '@/components/EventMessaging'
 import { EventAbsences } from '@/components/EventAbsences'
+import { GameRosterEditor } from '@/components/GameRosterEditor'
+import { GameRosterView } from '@/components/GameRosterView'
+import { MvpVoting } from '@/components/MvpVoting'
 import { EventStatus } from '@prisma/client'
 import { format, isPast } from 'date-fns'
 
@@ -50,6 +53,15 @@ export default async function CoachEventDetailPage({ params }: { params: Promise
   const pending = allPlayers.filter((p) => !rsvpMap[p.id])
 
   const eventPast = isPast(event.date)
+  const isGame = event.type === 'GAME'
+
+  // Check if current user is on the roster (for MVP voting eligibility)
+  const rosterEntry = isGame
+    ? await prisma.gameRoster.findUnique({
+        where: { eventId_userId: { eventId: id, userId: user.id } },
+      })
+    : null
+  const isOnRoster = !!rosterEntry
 
   return (
     <div className="min-h-[100dvh] pb-[calc(7rem+env(safe-area-inset-bottom,0px))]">
@@ -165,6 +177,30 @@ export default async function CoachEventDetailPage({ params }: { params: Promise
           </h2>
           <EventAbsences eventId={id} />
         </div>
+
+        {/* Game Roster — only for GAME events */}
+        {isGame && (
+          <div className="card">
+            <h2 className="font-display text-lg font-semibold text-mk-gold mb-4 uppercase tracking-wide">
+              Game Roster
+            </h2>
+            {user.role !== 'PLAYER' ? (
+              <GameRosterEditor eventId={id} allPlayers={allPlayers} />
+            ) : (
+              <GameRosterView eventId={id} />
+            )}
+          </div>
+        )}
+
+        {/* MVP Voting — only for past GAME events */}
+        {isGame && eventPast && (
+          <div className="card">
+            <h2 className="font-display text-lg font-semibold text-mk-gold mb-4 uppercase tracking-wide">
+              MVP Vote
+            </h2>
+            <MvpVoting eventId={id} currentUserId={user.id} isOnRoster={isOnRoster} />
+          </div>
+        )}
 
         {/* Messaging */}
         <div className="card">

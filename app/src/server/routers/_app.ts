@@ -8,6 +8,7 @@ import { teamsRouter } from './teams'
 import { messagesRouter } from './messages'
 import { absencesRouter } from './absences'
 import { documentsRouter } from './documents'
+import { rosterRouter, mvpRouter } from './roster'
 
 export const appRouter = router({
   auth: authRouter,
@@ -19,6 +20,8 @@ export const appRouter = router({
   messages: messagesRouter,
   absences: absencesRouter,
   documents: documentsRouter,
+  roster: rosterRouter,
+  mvp: mvpRouter,
 })
 
 export type AppRouter = typeof appRouter
