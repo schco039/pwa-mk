@@ -186,6 +186,18 @@ model Absence {
   @@index([from, to])
 }
 
+model Document {
+  id           String   @id @default(cuid())
+  title        String
+  category     String   // "Playbook" | "Reglement" | "Trainingsplan" | "Sonstiges"
+  fileName     String   // stored filename (cuid + extension)
+  mimeType     String
+  downloadable Boolean  @default(false)
+  uploadedAt   DateTime @default(now())
+
+  @@index([category])
+}
+
 model PushSubscription {
   id        String   @id @default(cuid())
   userId    String
