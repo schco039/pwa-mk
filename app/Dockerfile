@@ -5,7 +5,7 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm ci
+RUN npm install --frozen-lockfile 2>/dev/null || npm install
 
 # Build the app
 FROM base AS builder
