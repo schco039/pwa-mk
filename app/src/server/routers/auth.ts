@@ -13,32 +13,29 @@ export const authRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { email } = input
 
-      // 1. Verify identity via Paheko
-      const pahekoUser = await findPahekoUserByEmail(email)
-      if (!pahekoUser) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Email not registered. Contact your team admin.',
+      // 1. Check if user already exists locally (synced from Paheko or seeded)
+      const existingUser = await ctx.prisma.user.findUnique({ where: { email } })
+
+      if (!existingUser) {
+        // 2. Not found locally — look up in Paheko
+        const pahekoUser = await findPahekoUserByEmail(email)
+        if (!pahekoUser) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Email not registered. Contact your team admin.',
+          })
+        }
+        // Create local record from Paheko data
+        await ctx.prisma.user.create({
+          data: {
+            email,
+            pahekoId: pahekoUser.pahekoId,
+            name: pahekoUser.name,
+            role: pahekoUser.role,
+            phone: pahekoUser.phone,
+          },
         })
       }
-
-      // 2. Upsert local user record (keep in sync with Paheko)
-      await ctx.prisma.user.upsert({
-        where: { email },
-        update: {
-          name: pahekoUser.name,
-          role: pahekoUser.role,
-          phone: pahekoUser.phone,
-          pahekoId: pahekoUser.pahekoId,
-        },
-        create: {
-          email,
-          pahekoId: pahekoUser.pahekoId,
-          name: pahekoUser.name,
-          role: pahekoUser.role,
-          phone: pahekoUser.phone,
-        },
-      })
 
       // 3. Invalidate any unused OTPs for this email
       await ctx.prisma.otpCode.updateMany({
