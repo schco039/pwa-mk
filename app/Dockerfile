@@ -13,7 +13,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN node_modules/.bin/prisma generate
+RUN node node_modules/prisma/bin/prisma.js generate
 RUN npm run build
 
 # Production image
@@ -40,5 +40,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Use the locally installed prisma binary — never npx (pulls latest)
-CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && node server.js"]
+# Use direct node path — avoids symlink issues in standalone builds
+CMD ["sh", "-c", "node node_modules/prisma/bin/prisma.js migrate deploy && node server.js"]
