@@ -21,7 +21,7 @@ interface NormalizedUser {
   pahekoId: number
   name: string
   email: string
-  role: Role
+  role: Role | null  // null = field not set in Paheko → keep existing DB role
   phone: string | null
   jerseyNumber: number | null
 }
@@ -48,10 +48,10 @@ async function pahekoGet<T>(path: string): Promise<T> {
   return res.json() as Promise<T>
 }
 
-function normalizeRole(raw: string | null | undefined): Role {
-  if (!raw) return 'PLAYER'
+function normalizeRole(raw: string | null | undefined): Role | null {
+  if (!raw || !raw.trim()) return null  // not set → caller keeps existing role
   const upper = raw.trim().toUpperCase() as Role
-  return VALID_ROLES.includes(upper) ? upper : 'PLAYER'
+  return VALID_ROLES.includes(upper) ? upper : null
 }
 
 function normalize(m: PahekoMemberFull): NormalizedUser {

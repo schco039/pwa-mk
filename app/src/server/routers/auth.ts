@@ -32,18 +32,19 @@ export const authRouter = router({
             email,
             pahekoId: pahekoUser.pahekoId,
             name: pahekoUser.name,
-            role: pahekoUser.role,
+            // If PLAYER_APP_ROLE not set in Paheko, default new users to PLAYER
+            role: pahekoUser.role ?? 'PLAYER',
             phone: pahekoUser.phone,
             jerseyNumber: pahekoUser.jerseyNumber,
           },
         })
       } else if (pahekoUser) {
-        // Sync role, jersey and name changes from Paheko on every login
+        // Sync name, jersey from Paheko — only update role if explicitly set in Paheko
         await ctx.prisma.user.update({
           where: { email },
           data: {
             name: pahekoUser.name,
-            role: pahekoUser.role,
+            ...(pahekoUser.role !== null && { role: pahekoUser.role }),
             phone: pahekoUser.phone,
             jerseyNumber: pahekoUser.jerseyNumber,
           },
