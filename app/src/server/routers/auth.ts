@@ -50,8 +50,9 @@ export const authRouter = router({
         data: { email, code, expiresAt: new Date(Date.now() + expiryMs) },
       })
 
-      // 5. Send the OTP via email
-      await sendOtpEmail(email, pahekoUser.name, code)
+      // 5. Send the OTP via email — fetch name from local DB
+      const localUser = await ctx.prisma.user.findUnique({ where: { email } })
+      await sendOtpEmail(email, localUser?.name ?? 'Player', code)
 
       return { sent: true }
     }),
