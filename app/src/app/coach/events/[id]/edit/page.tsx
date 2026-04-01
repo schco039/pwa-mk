@@ -14,7 +14,10 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
   const user = await validateSession(token)
   if (!user || user.role === 'PLAYER') redirect('/dashboard')
 
-  const event = await prisma.event.findUnique({ where: { id } })
+  const [event, teams] = await Promise.all([
+    prisma.event.findUnique({ where: { id } }),
+    prisma.team.findMany({ orderBy: { name: 'asc' } }),
+  ])
   if (!event) notFound()
 
   return (
@@ -25,6 +28,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
           Edit Event
         </h1>
         <EventForm
+          teams={teams}
           initial={{
             id: event.id,
             type: event.type,
@@ -34,10 +38,12 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
             endTime: event.endTime,
             location: event.location,
             opponent: event.opponent,
+            opponentTeamId: event.opponentTeamId,
             homeAway: event.homeAway,
             notes: event.notes,
             isPublic: event.isPublic,
             isTemplate: event.isTemplate,
+            allowMaybe: event.allowMaybe,
           }}
         />
       </main>

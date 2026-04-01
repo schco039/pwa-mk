@@ -101,7 +101,7 @@ export default async function DashboardPage() {
                 )}
               </div>
 
-              <RsvpButton eventId={nextTraining.id} currentStatus={myTrainingRsvp?.status ?? null} />
+              <RsvpButton eventId={nextTraining.id} currentStatus={myTrainingRsvp?.status ?? null} allowMaybe={nextTraining.allowMaybe} />
 
               {/* Coach RSVP summary */}
               {rsvpCounts && (

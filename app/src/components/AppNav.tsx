@@ -14,6 +14,7 @@ const navItems = [
 const coachNavItems = [
   { href: '/coach/events', label: 'Events' },
   { href: '/coach/stats', label: 'Team' },
+  { href: '/coach/teams', label: 'Teams' },
 ]
 
 interface AppNavProps {

@@ -1,11 +1,17 @@
 import webpush from 'web-push'
 import { prisma } from './prisma'
 
-webpush.setVapidDetails(
-  `mailto:${process.env.SMTP_USER ?? 'noreply@mamerknights.lu'}`,
-  process.env.VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!,
-)
+function getWebPush() {
+  if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+    throw new Error('VAPID keys not configured')
+  }
+  webpush.setVapidDetails(
+    `mailto:${process.env.SMTP_USER ?? 'noreply@mamerknights.lu'}`,
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY,
+  )
+  return webpush
+}
 
 export interface PushPayload {
   title: string
@@ -34,10 +40,11 @@ async function sendPushToSubscriptions(
   subs: { endpoint: string; p256dh: string; auth: string; id: string }[],
   payload: PushPayload,
 ) {
+  const wp = getWebPush()
   const json = JSON.stringify(payload)
   const results = await Promise.allSettled(
     subs.map((sub) =>
-      webpush.sendNotification(
+      wp.sendNotification(
         { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
         json,
       ),

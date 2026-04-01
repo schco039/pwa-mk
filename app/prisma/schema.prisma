@@ -86,29 +86,44 @@ model Session {
   @@index([userId])
 }
 
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  shortName String?
+  location  String?
+  logoUrl   String?
+  notes     String?
+  games     Event[]  @relation("OpponentTeam")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Event {
-  id           String      @id @default(cuid())
-  type         EventType
-  title        String
-  date         DateTime
-  startTime    String // "19:00"
-  endTime      String? // "21:00"
-  location     String?
-  opponent     String? // Games only
-  homeAway     HomeAway? // Games only
-  scoreUs      Int?
-  scoreThem    Int?
-  result       GameResult?
-  notes        String?
-  status       EventStatus @default(ACTIVE)
-  cancelReason String?
-  isTemplate   Boolean     @default(false)
-  templateId   String? // For generated recurring events
-  isPublic     Boolean     @default(true)
-  rsvps        Rsvp[]
-  attendances  Attendance[]
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  id             String      @id @default(cuid())
+  type           EventType
+  title          String
+  date           DateTime
+  startTime      String // "19:00"
+  endTime        String? // "21:00"
+  location       String?
+  opponent       String? // Games only — free text fallback
+  opponentTeamId String? // Games only — link to Team
+  opponentTeam   Team?       @relation("OpponentTeam", fields: [opponentTeamId], references: [id])
+  homeAway       HomeAway? // Games only
+  scoreUs        Int?
+  scoreThem      Int?
+  result         GameResult?
+  notes          String?
+  status         EventStatus @default(ACTIVE)
+  cancelReason   String?
+  isTemplate     Boolean     @default(false)
+  templateId     String? // For generated recurring events
+  isPublic       Boolean     @default(true)
+  allowMaybe     Boolean     @default(false)
+  rsvps          Rsvp[]
+  attendances    Attendance[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
   @@index([date, status])
   @@index([type, status])

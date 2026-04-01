@@ -94,7 +94,7 @@ export default async function SchedulePage() {
               </div>
 
               {event.status !== 'CANCELLED' && (
-                <RsvpButton eventId={event.id} currentStatus={rsvpMap[event.id] ?? null} />
+                <RsvpButton eventId={event.id} currentStatus={rsvpMap[event.id] ?? null} allowMaybe={event.allowMaybe} />
               )}
               {event.status === 'CANCELLED' && event.cancelReason && (
                 <p className="text-red-400/70 text-xs">Reason: {event.cancelReason}</p>

@@ -4,6 +4,7 @@ import { eventsRouter } from './events'
 import { rsvpRouter } from './rsvp'
 import { attendanceRouter } from './attendance'
 import { pushRouter } from './push'
+import { teamsRouter } from './teams'
 
 export const appRouter = router({
   auth: authRouter,
@@ -11,6 +12,7 @@ export const appRouter = router({
   rsvp: rsvpRouter,
   attendance: attendanceRouter,
   push: pushRouter,
+  teams: teamsRouter,
 })
 
 export type AppRouter = typeof appRouter

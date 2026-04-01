@@ -12,10 +12,12 @@ const eventCreateSchema = z.object({
   endTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
   location: z.string().optional(),
   opponent: z.string().optional(),
+  opponentTeamId: z.string().optional(),
   homeAway: z.nativeEnum(HomeAway).optional(),
   notes: z.string().optional(),
   isPublic: z.boolean().default(true),
   isTemplate: z.boolean().default(false),
+  allowMaybe: z.boolean().default(false),
 })
 
 const eventUpdateSchema = eventCreateSchema.partial().extend({

@@ -6,19 +6,22 @@ import { useRouter } from 'next/navigation'
 interface RsvpButtonProps {
   eventId: string
   currentStatus: 'YES' | 'NO' | 'MAYBE' | null
+  allowMaybe?: boolean
 }
 
-const options = [
-  { status: 'YES' as const, label: "I'm coming", className: 'bg-green-600 text-white hover:bg-green-500' },
-  { status: 'NO' as const, label: "Can't make it", className: 'bg-red-700/80 text-white hover:bg-red-600' },
-  { status: 'MAYBE' as const, label: 'Maybe', className: 'bg-white/10 text-white hover:bg-white/20' },
-]
-
-export function RsvpButton({ eventId, currentStatus }: RsvpButtonProps) {
+export function RsvpButton({ eventId, currentStatus, allowMaybe = false }: RsvpButtonProps) {
   const router = useRouter()
   const setRsvp = trpc.rsvp.set.useMutation({
     onSuccess: () => router.refresh(),
   })
+
+  const options = [
+    { status: 'YES' as const, label: "I'm coming", className: 'bg-green-600 text-white hover:bg-green-500' },
+    { status: 'NO' as const, label: "Can't make it", className: 'bg-red-700/80 text-white hover:bg-red-600' },
+    ...(allowMaybe
+      ? [{ status: 'MAYBE' as const, label: 'Maybe', className: 'bg-white/10 text-white hover:bg-white/20' }]
+      : []),
+  ]
 
   return (
     <div className="flex gap-2 flex-wrap">
