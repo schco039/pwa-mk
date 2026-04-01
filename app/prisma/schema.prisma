@@ -56,11 +56,12 @@ model User {
   jerseyNumber Int?
   position     String?
   avatarUrl    String?
-  pushSubs     PushSubscription[]
-  sessions     Session[]
-  rsvps        Rsvp[]
-  attendances  Attendance[]
-  createdAt    DateTime           @default(now())
+  pushSubs        PushSubscription[]
+  sessions        Session[]
+  rsvps           Rsvp[]
+  attendances     Attendance[]
+  sentMessages    EventMessage[]
+  createdAt       DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
 }
 
@@ -123,6 +124,7 @@ model Event {
   category       String?     // For TRAINING: "FLAG" | "TACKLE" | null (both)
   rsvps          Rsvp[]
   attendances    Attendance[]
+  messages       EventMessage[]
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
@@ -156,6 +158,18 @@ model Attendance {
   createdAt   DateTime  @default(now())
 
   @@unique([userId, eventId])
+}
+
+model EventMessage {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  body      String
+  sentAt    DateTime @default(now())
+
+  @@index([eventId])
 }
 
 model PushSubscription {

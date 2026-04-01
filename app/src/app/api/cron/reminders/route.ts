@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { sendPushBroadcast, sendPushToUser } from '@/lib/push'
+import { sendPushToUser } from '@/lib/push'
 import { EventType, EventStatus } from '@prisma/client'
 import { addHours } from 'date-fns'
 
@@ -12,14 +12,11 @@ export async function GET(request: Request) {
   }
 
   const now = new Date()
-  const in2h = addHours(now, 2)
-  const in24h = addHours(now, 24)
   const in48h = addHours(now, 48)
 
-  // Find training events in the next 48h window
   const upcoming = await prisma.event.findMany({
     where: {
-      type: EventType.TRAINING,
+      type: { in: [EventType.TRAINING, EventType.GAME] },
       status: EventStatus.ACTIVE,
       isTemplate: false,
       date: { gte: now, lte: in48h },
@@ -31,7 +28,7 @@ export async function GET(request: Request) {
   for (const event of upcoming) {
     const hoursUntil = (event.date.getTime() - now.getTime()) / 3_600_000
 
-    // 24h reminder → all players without RSVP
+    // ── 24h reminder ────────────────────────────────────────────────────────
     if (hoursUntil >= 22 && hoursUntil <= 26) {
       const rsvpedUserIds = (
         await prisma.rsvp.findMany({ where: { eventId: event.id }, select: { userId: true } })
@@ -42,18 +39,33 @@ export async function GET(request: Request) {
         select: { id: true },
       })
 
-      for (const player of noRsvpPlayers) {
-        await sendPushToUser(player.id, {
-          title: 'Training tomorrow 🏈',
-          body: `${event.title} at ${event.startTime}${event.location ? ` — ${event.location}` : ''}. Are you coming?`,
-          url: '/schedule',
-        })
-        sent++
+      if (event.type === EventType.TRAINING) {
+        for (const player of noRsvpPlayers) {
+          await sendPushToUser(player.id, {
+            title: 'Training tomorrow 🏈',
+            body: `${event.title} at ${event.startTime}${event.location ? ` — ${event.location}` : ''}. Are you coming?`,
+            url: '/schedule',
+          })
+          sent++
+        }
+      }
+
+      if (event.type === EventType.GAME) {
+        const opponent = event.opponent ?? 'Unknown'
+        const location = event.homeAway === 'HOME' ? 'Home' : event.location ?? 'Away'
+        for (const player of noRsvpPlayers) {
+          await sendPushToUser(player.id, {
+            title: 'Game tomorrow 🏆',
+            body: `vs ${opponent} — ${event.startTime} · ${location}. Are you in?`,
+            url: '/schedule',
+          })
+          sent++
+        }
       }
     }
 
-    // 2h reminder → players who RSVP'd YES
-    if (hoursUntil >= 1.5 && hoursUntil <= 2.5) {
+    // ── 2h reminder (trainings only — players who said YES) ─────────────────
+    if (event.type === EventType.TRAINING && hoursUntil >= 1.5 && hoursUntil <= 2.5) {
       const yesPlayers = await prisma.rsvp.findMany({
         where: { eventId: event.id, status: 'YES' },
         select: { userId: true },
