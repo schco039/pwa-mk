@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Oswald, Montserrat } from 'next/font/google'
 import { TrpcProvider } from '@/components/TrpcProvider'
+import { ServiceWorkerRegistrar } from '@/components/ServiceWorkerRegistrar'
 import './globals.css'
 
 const oswald = Oswald({
@@ -32,7 +33,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${oswald.variable} ${montserrat.variable}`}>
       <body>
-        <TrpcProvider>{children}</TrpcProvider>
+        <TrpcProvider>
+            <ServiceWorkerRegistrar />
+            {children}
+          </TrpcProvider>
       </body>
     </html>
   )
