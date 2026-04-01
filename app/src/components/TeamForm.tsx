@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
 
@@ -18,6 +18,9 @@ interface TeamFormProps {
 export function TeamForm({ initial }: TeamFormProps) {
   const router = useRouter()
   const isEdit = !!initial
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState('')
 
   const [form, setForm] = useState({
     name: initial?.name ?? '',
@@ -26,6 +29,25 @@ export function TeamForm({ initial }: TeamFormProps) {
     logoUrl: initial?.logoUrl ?? '',
     notes: initial?.notes ?? '',
   })
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    setUploadError('')
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await fetch('/api/upload', { method: 'POST', body: fd })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error ?? 'Upload failed')
+      setForm((f) => ({ ...f, logoUrl: json.url }))
+    } catch (err: unknown) {
+      setUploadError(err instanceof Error ? err.message : 'Upload failed')
+    } finally {
+      setUploading(false)
+    }
+  }
 
   const create = trpc.teams.create.useMutation({ onSuccess: () => router.push('/coach/teams') })
   const update = trpc.teams.update.useMutation({ onSuccess: () => router.push('/coach/teams') })
@@ -83,17 +105,37 @@ export function TeamForm({ initial }: TeamFormProps) {
       </div>
 
       <div>
-        <label className="block text-white/60 text-sm mb-2 uppercase tracking-wide">Logo URL</label>
-        <input
-          type="url"
-          value={form.logoUrl}
-          onChange={(e) => setForm((f) => ({ ...f, logoUrl: e.target.value }))}
-          placeholder="https://..."
-          className="input-field text-left tracking-normal"
-        />
-        {form.logoUrl && (
-          <img src={form.logoUrl} alt="preview" className="mt-2 w-16 h-16 object-contain rounded-lg bg-white/5" />
-        )}
+        <label className="block text-white/60 text-sm mb-2 uppercase tracking-wide">Logo</label>
+        <div className="flex items-center gap-3">
+          {form.logoUrl && (
+            <img src={form.logoUrl} alt="preview" className="w-14 h-14 object-contain rounded-lg bg-white/5 flex-shrink-0" />
+          )}
+          <div className="flex-1 space-y-2">
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              className="btn-ghost text-sm py-2 w-full"
+            >
+              {uploading ? 'Uploading...' : form.logoUrl ? 'Replace image' : 'Upload image'}
+            </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+            <input
+              type="url"
+              value={form.logoUrl}
+              onChange={(e) => setForm((f) => ({ ...f, logoUrl: e.target.value }))}
+              placeholder="or paste URL https://..."
+              className="input-field text-left tracking-normal text-sm py-2"
+            />
+          </div>
+        </div>
+        {uploadError && <p className="text-red-400 text-xs mt-1">{uploadError}</p>}
       </div>
 
       <div>

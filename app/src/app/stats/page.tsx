@@ -4,6 +4,12 @@ import { validateSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { AppNav } from '@/components/AppNav'
 import { format } from 'date-fns'
+import { createHmac } from 'crypto'
+
+function calendarToken(userId: string): string {
+  const secret = process.env.SESSION_SECRET ?? 'fallback-secret'
+  return createHmac('sha256', secret).update(userId + ':calendar').digest('hex').slice(0, 32)
+}
 
 export default async function StatsPage() {
   const cookieStore = await cookies()
@@ -36,6 +42,10 @@ export default async function StatsPage() {
   const teamPresent = teamRecords.filter((r) => r.present).length
   const teamRate = teamTotal > 0 ? Math.round((teamPresent / teamTotal) * 100) : null
 
+  const appUrl = process.env.APP_URL ?? ''
+  const calToken = calendarToken(user.id)
+  const calendarUrl = `${appUrl}/api/calendar?user=${user.id}&token=${calToken}`
+
   return (
     <div className="min-h-[100dvh] pb-[calc(7rem+env(safe-area-inset-bottom,0px))]">
       <AppNav userName={user.name} role={user.role} />
@@ -65,6 +75,25 @@ export default async function StatsPage() {
             <span className="text-white font-semibold">{present}</span> present out of{' '}
             <span className="text-white font-semibold">{total}</span> recorded sessions
           </p>
+        </div>
+
+        {/* Calendar subscription */}
+        <div className="card space-y-2">
+          <h2 className="font-display text-sm uppercase tracking-widest text-white/40 mb-2">Kalender abonnieren</h2>
+          <p className="text-white/50 text-xs">Alle Events direkt in deinen Kalender (Google, Apple, Outlook).</p>
+          <div className="flex gap-2 mt-2">
+            <input
+              readOnly
+              value={calendarUrl}
+              className="input-field text-xs py-2 text-left tracking-normal flex-1 truncate"
+            />
+            <a
+              href={`webcal://${calendarUrl.replace(/^https?:\/\//, '')}`}
+              className="btn-ghost text-xs py-2 px-3 flex-shrink-0"
+            >
+              Abonnieren
+            </a>
+          </div>
         </div>
 
         {/* History */}

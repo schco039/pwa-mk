@@ -78,8 +78,8 @@ export function AppNav({ userName, role }: AppNavProps) {
       <header className="sticky top-0 z-50 bg-mk-navy-dark border-b border-white/10">
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link href="/dashboard">
-            <span className="font-display text-xl font-bold tracking-widest text-mk-gold uppercase">
-              Knights
+            <span className="font-display text-xl font-bold tracking-widest uppercase">
+              <span className="text-white">Mamer </span><span className="text-mk-gold">Knights</span>
             </span>
           </Link>
           <div className="flex items-center gap-4">

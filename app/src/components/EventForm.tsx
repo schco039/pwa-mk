@@ -290,7 +290,7 @@ export function EventForm({ teams = [], initial }: EventFormProps) {
       {/* Training / Game category */}
       {(form.type === 'TRAINING' || form.type === 'GAME') && (
         <div>
-          <label className="block text-white/60 text-sm mb-2 uppercase tracking-wide">Training Type</label>
+          <label className="block text-white/60 text-sm mb-2 uppercase tracking-wide">Category</label>
           <div className="flex gap-2">
             {([
               { value: '' as const, label: 'Both (Flag & Tackle)' },

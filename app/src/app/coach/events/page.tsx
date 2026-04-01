@@ -16,14 +16,15 @@ export default async function CoachEventsPage() {
 
   const events = await prisma.event.findMany({
     where: { isTemplate: false },
-    orderBy: { date: 'desc' },
-    take: 80,
+    orderBy: { date: 'asc' },
+    take: 200,
     include: { _count: { select: { rsvps: true } } },
   })
 
-  const upcoming = events.filter((e) => e.date >= new Date() && e.status !== EventStatus.CANCELLED)
-  const past = events.filter((e) => e.date < new Date())
-  const cancelled = events.filter((e) => e.status === EventStatus.CANCELLED)
+  const now = new Date()
+  const upcoming = events.filter((e) => e.date >= now && e.status !== EventStatus.CANCELLED)
+  const past = events.filter((e) => e.date < now).reverse()
+  const cancelled = events.filter((e) => e.status === EventStatus.CANCELLED && e.date >= now)
 
   function EventRow({ event }: { event: (typeof events)[0] }) {
     return (
@@ -34,6 +35,8 @@ export default async function CoachEventsPage() {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
             <span className="text-xs uppercase tracking-widest text-white/40">{event.type}</span>
+            {event.category === 'FLAG' && <span className="text-xs text-orange-400 border border-orange-400/30 rounded px-1">🏴 Flag</span>}
+            {event.category === 'TACKLE' && <span className="text-xs text-blue-400 border border-blue-400/30 rounded px-1">🏈 Tackle</span>}
             {event.status === EventStatus.CANCELLED && (
               <span className="text-xs text-red-400">Cancelled</span>
             )}
