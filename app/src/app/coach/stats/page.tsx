@@ -3,7 +3,6 @@ import { cookies } from 'next/headers'
 import { validateSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { AppNav } from '@/components/AppNav'
-import Link from 'next/link'
 
 export default async function CoachStatsPage() {
   const cookieStore = await cookies()
@@ -42,15 +41,10 @@ export default async function CoachStatsPage() {
   const teamRate = teamTotal > 0 ? Math.round((teamPresent / teamTotal) * 100) : null
 
   return (
-    <div className="min-h-screen pb-24">
+    <div className="min-h-screen pb-28">
       <AppNav userName={user.name} role={user.role} />
       <main className="max-w-2xl mx-auto px-4 pt-6 space-y-5">
-        <div className="flex items-center justify-between">
-          <h1 className="font-display text-2xl font-bold text-mk-gold uppercase tracking-widest">Team Stats</h1>
-          <Link href="/coach/teams" className="text-white/40 hover:text-mk-gold text-sm transition-colors">
-            Manage Teams →
-          </Link>
-        </div>
+        <h1 className="font-display text-2xl font-bold text-mk-gold uppercase tracking-widest">Team Stats</h1>
 
         {/* Team overview */}
         <div className="card text-center">

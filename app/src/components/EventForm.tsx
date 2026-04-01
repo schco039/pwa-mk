@@ -29,6 +29,7 @@ interface EventFormProps {
     isPublic: boolean
     isTemplate: boolean
     allowMaybe: boolean
+    category?: string | null
   }
 }
 
@@ -47,6 +48,7 @@ export function EventForm({ teams = [], initial }: EventFormProps) {
     opponentFreeText: initial?.opponent ?? '',
     homeAway: initial?.homeAway ?? 'HOME',
     notes: initial?.notes ?? '',
+    category: (initial?.category ?? '') as '' | 'FLAG' | 'TACKLE',
     isPublic: initial?.isPublic ?? true,
     isTemplate: initial?.isTemplate ?? false,
     allowMaybe: initial?.allowMaybe ?? false,
@@ -95,6 +97,7 @@ export function EventForm({ teams = [], initial }: EventFormProps) {
       isPublic: form.isPublic,
       isTemplate: form.isTemplate,
       allowMaybe: form.allowMaybe,
+      category: form.type === 'TRAINING' && form.category ? (form.category as 'FLAG' | 'TACKLE') : undefined,
     }
 
     if (isEdit) {
@@ -283,6 +286,33 @@ export function EventForm({ teams = [], initial }: EventFormProps) {
           className="input-field text-left tracking-normal resize-none"
         />
       </div>
+
+      {/* Training category */}
+      {form.type === 'TRAINING' && (
+        <div>
+          <label className="block text-white/60 text-sm mb-2 uppercase tracking-wide">Training Type</label>
+          <div className="flex gap-2">
+            {([
+              { value: '' as const, label: 'Both (Flag & Tackle)' },
+              { value: 'FLAG' as const, label: '🏴 Flag Football' },
+              { value: 'TACKLE' as const, label: '🏈 Tackle Football' },
+            ]).map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setForm((f) => ({ ...f, category: opt.value }))}
+                className={`flex-1 py-2 px-2 rounded-lg font-display text-xs uppercase tracking-wide transition-colors border ${
+                  form.category === opt.value
+                    ? 'bg-mk-gold text-mk-navy border-mk-gold'
+                    : 'bg-transparent text-white/50 border-white/20 hover:border-white/40'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Options */}
       <div className="space-y-2 border border-white/10 rounded-lg p-4">

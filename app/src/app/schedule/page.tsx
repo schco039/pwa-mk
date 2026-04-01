@@ -1,24 +1,11 @@
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
-import Link from 'next/link'
 import { validateSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { AppNav } from '@/components/AppNav'
-import { RsvpButton } from '@/components/RsvpButton'
-import { EventType, EventStatus } from '@prisma/client'
-import { format, isPast } from 'date-fns'
-
-const typeLabel: Record<EventType, string> = {
-  GAME: 'Game',
-  TRAINING: 'Training',
-  EVENT: 'Event',
-}
-
-const typeColor: Record<EventType, string> = {
-  GAME: 'text-mk-gold border-mk-gold/40',
-  TRAINING: 'text-blue-400 border-blue-400/30',
-  EVENT: 'text-purple-400 border-purple-400/30',
-}
+import { ScheduleView } from '@/components/ScheduleView'
+import { EventStatus } from '@prisma/client'
+import { addWeeks } from 'date-fns'
 
 export default async function SchedulePage() {
   const cookieStore = await cookies()
@@ -27,14 +14,19 @@ export default async function SchedulePage() {
   const user = await validateSession(token)
   if (!user) redirect('/login')
 
+  const since = new Date()
+  since.setDate(since.getDate() - 7) // include last week for "recent" section
+
+  // Fetch next ~12 weeks of events (client will paginate further)
+  const until = addWeeks(new Date(), 12)
+
   const events = await prisma.event.findMany({
     where: {
-      status: { not: EventStatus.CANCELLED },
       isTemplate: false,
-      date: { gte: new Date(new Date().setDate(new Date().getDate() - 7)) }, // include last week
+      date: { gte: since, lte: until },
     },
     orderBy: { date: 'asc' },
-    take: 60,
+    take: 200,
   })
 
   const eventIds = events.map((e) => e.id)
@@ -43,96 +35,32 @@ export default async function SchedulePage() {
   })
   const rsvpMap = Object.fromEntries(myRsvps.map((r) => [r.eventId, r.status as 'YES' | 'NO' | 'MAYBE']))
 
-  const upcoming = events.filter((e) => !isPast(e.date) || format(e.date, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd'))
-  const past = events.filter((e) => isPast(e.date) && format(e.date, 'yyyy-MM-dd') !== format(new Date(), 'yyyy-MM-dd'))
+  const serialized = events.map((e) => ({
+    id: e.id,
+    type: e.type as string,
+    title: e.title,
+    date: e.date.toISOString(),
+    startTime: e.startTime,
+    endTime: e.endTime,
+    location: e.location,
+    opponent: e.opponent,
+    homeAway: e.homeAway as string | null,
+    status: e.status as string,
+    cancelReason: e.cancelReason,
+    category: e.category,
+    allowMaybe: e.allowMaybe,
+    scoreUs: e.scoreUs,
+    scoreThem: e.scoreThem,
+    result: e.result as string | null,
+    myRsvp: rsvpMap[e.id] ?? null,
+  }))
 
   return (
-    <div className="min-h-screen pb-24">
+    <div className="min-h-screen pb-28">
       <AppNav userName={user.name} role={user.role} />
-
-      <main className="max-w-2xl mx-auto px-4 pt-6 space-y-6">
-        <h1 className="font-display text-2xl font-bold text-mk-gold uppercase tracking-widest">Schedule</h1>
-
-        {/* Upcoming */}
-        <section className="space-y-3">
-          {upcoming.length === 0 && (
-            <div className="card text-white/40 text-sm">No upcoming events scheduled.</div>
-          )}
-          {upcoming.map((event) => (
-            <div key={event.id} className="card space-y-3">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={`text-xs uppercase tracking-widest border rounded px-2 py-0.5 ${typeColor[event.type]}`}>
-                      {typeLabel[event.type]}
-                    </span>
-                    {event.status === 'CANCELLED' && (
-                      <span className="text-xs uppercase tracking-widest border rounded px-2 py-0.5 text-red-400 border-red-400/30">
-                        Cancelled
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-white font-semibold">
-                    {event.type === 'GAME' && event.opponent
-                      ? `${event.homeAway === 'HOME' ? 'vs' : '@'} ${event.opponent}`
-                      : event.title}
-                  </p>
-                  <p className="text-white/60 text-sm mt-0.5">
-                    {format(event.date, 'EEE d MMM')} · {event.startTime}
-                    {event.endTime && `–${event.endTime}`}
-                  </p>
-                  {event.location && <p className="text-white/40 text-xs mt-0.5">{event.location}</p>}
-                </div>
-                {user.role !== 'PLAYER' && (
-                  <Link
-                    href={`/coach/events/${event.id}`}
-                    className="text-white/30 hover:text-mk-gold text-xs uppercase tracking-wide flex-shrink-0"
-                  >
-                    Manage
-                  </Link>
-                )}
-              </div>
-
-              {event.status !== 'CANCELLED' && (
-                <RsvpButton eventId={event.id} currentStatus={rsvpMap[event.id] ?? null} allowMaybe={event.allowMaybe} />
-              )}
-              {event.status === 'CANCELLED' && event.cancelReason && (
-                <p className="text-red-400/70 text-xs">Reason: {event.cancelReason}</p>
-              )}
-            </div>
-          ))}
-        </section>
-
-        {/* Past events (last 7 days) */}
-        {past.length > 0 && (
-          <section>
-            <h2 className="font-display text-sm uppercase tracking-widest text-white/30 mb-3">Recent</h2>
-            <div className="space-y-2">
-              {past.map((event) => (
-                <div key={event.id} className="card opacity-60 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className={`text-xs uppercase tracking-widest border rounded px-2 py-0.5 ${typeColor[event.type]}`}>
-                      {typeLabel[event.type]}
-                    </span>
-                    <p className="text-white text-sm font-semibold">
-                      {event.type === 'GAME' && event.opponent
-                        ? `${event.homeAway === 'HOME' ? 'vs' : '@'} ${event.opponent}`
-                        : event.title}
-                    </p>
-                  </div>
-                  <p className="text-white/50 text-xs">
-                    {format(event.date, 'EEE d MMM')} · {event.startTime}
-                    {event.result && (
-                      <span className="ml-2 text-mk-gold font-semibold">
-                        {event.scoreUs}–{event.scoreThem} ({event.result})
-                      </span>
-                    )}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
+      <main className="max-w-2xl mx-auto px-4 pt-6 space-y-1">
+        <h1 className="font-display text-2xl font-bold text-mk-gold uppercase tracking-widest mb-5">Schedule</h1>
+        <ScheduleView events={serialized} isCoach={user.role !== 'PLAYER'} />
       </main>
     </div>
   )

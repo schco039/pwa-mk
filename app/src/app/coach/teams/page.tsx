@@ -20,7 +20,7 @@ export default async function TeamsPage() {
   })
 
   return (
-    <div className="min-h-screen pb-24">
+    <div className="min-h-screen pb-28">
       <AppNav userName={user.name} role={user.role} />
       <main className="max-w-2xl mx-auto px-4 pt-6 space-y-5">
         <div className="flex items-center justify-between">

@@ -120,6 +120,7 @@ model Event {
   templateId     String? // For generated recurring events
   isPublic       Boolean     @default(true)
   allowMaybe     Boolean     @default(false)
+  category       String?     // For TRAINING: "FLAG" | "TACKLE" | null (both)
   rsvps          Rsvp[]
   attendances    Attendance[]
   createdAt      DateTime    @default(now())

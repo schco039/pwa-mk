@@ -18,6 +18,7 @@ const eventCreateSchema = z.object({
   isPublic: z.boolean().default(true),
   isTemplate: z.boolean().default(false),
   allowMaybe: z.boolean().default(false),
+  category: z.enum(['FLAG', 'TACKLE']).optional(),
 })
 
 const eventUpdateSchema = eventCreateSchema.partial().extend({

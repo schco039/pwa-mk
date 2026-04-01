@@ -12,7 +12,7 @@ export default async function NewTeamPage() {
   if (!user || user.role === 'PLAYER') redirect('/dashboard')
 
   return (
-    <div className="min-h-screen pb-24">
+    <div className="min-h-screen pb-28">
       <AppNav userName={user.name} role={user.role} />
       <main className="max-w-2xl mx-auto px-4 pt-6">
         <h1 className="font-display text-2xl font-bold text-mk-gold uppercase tracking-widest mb-6">New Team</h1>
