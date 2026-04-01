@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  app:
+    build: ./app
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:3100:3000'
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://knights:${POSTGRES_PASSWORD:-secret}@db:5432/knights
+      - NODE_ENV=production
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=knights
+      - POSTGRES_USER=knights
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-secret}
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U knights']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

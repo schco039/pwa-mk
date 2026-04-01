@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --mk-navy: #1b2a4a;
+    --mk-navy-dark: #0f1b2e;
+    --mk-gold: #c5a55a;
+    --mk-gold-light: #d4b96e;
+    --mk-white: #ffffff;
+  }
+
+  body {
+    @apply font-body text-mk-white bg-mk-navy-dark;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-mk-gold text-mk-navy font-display font-semibold tracking-wide px-6 py-3 rounded-lg
+           hover:bg-mk-gold-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-ghost {
+    @apply text-mk-gold border border-mk-gold font-display font-semibold tracking-wide px-6 py-3 rounded-lg
+           hover:bg-mk-gold hover:text-mk-navy transition-colors;
+  }
+
+  .input-field {
+    @apply w-full bg-mk-navy border border-white/20 text-mk-white rounded-lg px-4 py-3
+           placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-mk-gold focus:border-transparent
+           transition text-center text-lg tracking-widest;
+  }
+
+  .card {
+    @apply bg-mk-navy rounded-xl border border-white/10 p-6;
+  }
+}

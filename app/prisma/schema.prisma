@@ -1,0 +1,155 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  PLAYER
+  COACH
+  COMITE
+}
+
+enum EventType {
+  GAME
+  TRAINING
+  EVENT
+}
+
+enum HomeAway {
+  HOME
+  AWAY
+}
+
+enum GameResult {
+  WIN
+  LOSS
+  TIE
+}
+
+enum EventStatus {
+  ACTIVE
+  CANCELLED
+  MOVED
+}
+
+enum RsvpStatus {
+  YES
+  NO
+  MAYBE
+}
+
+// ─── Models ───────────────────────────────────────────────────────────────────
+
+model User {
+  id           String             @id @default(cuid())
+  pahekoId     Int                @unique
+  email        String             @unique
+  name         String
+  phone        String?
+  role         Role               @default(PLAYER)
+  jerseyNumber Int?
+  position     String?
+  avatarUrl    String?
+  pushSubs     PushSubscription[]
+  sessions     Session[]
+  rsvps        Rsvp[]
+  attendances  Attendance[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+}
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  email     String
+  code      String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email, used])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Event {
+  id           String      @id @default(cuid())
+  type         EventType
+  title        String
+  date         DateTime
+  startTime    String // "19:00"
+  endTime      String? // "21:00"
+  location     String?
+  opponent     String? // Games only
+  homeAway     HomeAway? // Games only
+  scoreUs      Int?
+  scoreThem    Int?
+  result       GameResult?
+  notes        String?
+  status       EventStatus @default(ACTIVE)
+  cancelReason String?
+  isTemplate   Boolean     @default(false)
+  templateId   String? // For generated recurring events
+  isPublic     Boolean     @default(true)
+  rsvps        Rsvp[]
+  attendances  Attendance[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([date, status])
+  @@index([type, status])
+}
+
+model Rsvp {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventId   String
+  event     Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  status    RsvpStatus
+  reason    String? // Why can't attend
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@unique([userId, eventId])
+}
+
+model Attendance {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventId     String
+  event       Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  present     Boolean
+  confirmedBy String? // Coach userId who validated
+  confirmedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@unique([userId, eventId])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
