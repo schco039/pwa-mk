@@ -13,7 +13,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN node node_modules/prisma/bin/prisma.js generate
+# npm run scripts add node_modules/.bin to PATH automatically
+RUN npm run db:generate
 RUN npm run build
 
 # Production image
@@ -40,5 +41,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Use direct node path — avoids symlink issues in standalone builds
-CMD ["sh", "-c", "node node_modules/prisma/bin/prisma.js migrate deploy && node server.js"]
+# prisma/build/index.js is the actual CLI entry point in Prisma v5
+CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy && node server.js"]
