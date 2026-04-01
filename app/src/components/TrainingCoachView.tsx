@@ -66,8 +66,11 @@ function AvailabilityButtons({ training }: { training: Training }) {
 }
 
 export function TrainingCoachView({ trainings }: { trainings: Training[] }) {
-  const upcoming = trainings.filter((t) => !t.isPast)
-  const past = trainings.filter((t) => t.isPast)
+  const [filter, setFilter] = useState<'' | 'FLAG' | 'TACKLE'>('')
+
+  const filtered = filter === '' ? trainings : trainings.filter((t) => !t.category || t.category === filter)
+  const upcoming = filtered.filter((t) => !t.isPast)
+  const past = filtered.filter((t) => t.isPast)
 
   function TrainingCard({ t }: { t: Training }) {
     const date = new Date(t.date)
@@ -105,6 +108,19 @@ export function TrainingCoachView({ trainings }: { trainings: Training[] }) {
 
   return (
     <div className="space-y-8">
+      {/* Category filter */}
+      <div className="flex gap-2">
+        {([['', 'Alle'], ['FLAG', '🏴 Flag'], ['TACKLE', '🏈 Tackle']] as const).map(([val, label]) => (
+          <button
+            key={val}
+            onClick={() => setFilter(val)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-display uppercase tracking-wide transition-colors border ${
+              filter === val ? 'bg-mk-gold text-mk-navy border-mk-gold' : 'text-white/50 border-white/20 hover:border-white/40'
+            }`}
+          >{label}</button>
+        ))}
+      </div>
+
       <section>
         <h2 className="font-display text-lg font-bold uppercase tracking-widest text-blue-400 mb-3">
           Upcoming

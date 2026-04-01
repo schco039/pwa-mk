@@ -40,9 +40,11 @@ export default async function CoachEventDetailPage({ params }: { params: Promise
   const rsvpMap = Object.fromEntries(event.rsvps.map((r) => [r.userId, r]))
   const attendanceMap = Object.fromEntries(event.attendances.map((a) => [a.userId, a]))
 
-  const yes = event.rsvps.filter((r) => r.status === 'YES')
-  const no = event.rsvps.filter((r) => r.status === 'NO')
-  const maybe = event.rsvps.filter((r) => r.status === 'MAYBE')
+  // Split RSVPs: coaches vs players
+  const coachRsvps = event.rsvps.filter((r) => r.user.role === 'COACH')
+  const yes = event.rsvps.filter((r) => r.status === 'YES' && r.user.role === 'PLAYER')
+  const no = event.rsvps.filter((r) => r.status === 'NO' && r.user.role === 'PLAYER')
+  const maybe = event.rsvps.filter((r) => r.status === 'MAYBE' && r.user.role === 'PLAYER')
   const pending = allPlayers.filter((p) => !rsvpMap[p.id])
 
   const eventPast = isPast(event.date)
@@ -80,6 +82,22 @@ export default async function CoachEventDetailPage({ params }: { params: Promise
             )}
           </div>
         </div>
+
+        {/* Coach availability (only for TRAINING, visible to COMITE) */}
+        {event.type === 'TRAINING' && coachRsvps.length > 0 && (
+          <div className="card">
+            <h2 className="font-display text-sm font-semibold text-white/40 mb-3 uppercase tracking-wide">Trainer Verfügbarkeit</h2>
+            <div className="flex flex-wrap gap-2">
+              {coachRsvps.map((r) => (
+                <span key={r.id} className={`text-xs px-2 py-1 rounded border ${
+                  r.status === 'YES' ? 'text-green-400 border-green-400/30' : 'text-red-400 border-red-400/30'
+                }`}>
+                  {r.status === 'YES' ? '✓' : '✗'} {r.user.name}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* RSVP Summary */}
         <div className="card">
