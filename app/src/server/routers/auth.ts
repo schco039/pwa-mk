@@ -91,7 +91,7 @@ export const authRouter = router({
       const cookieStore = await cookies()
       cookieStore.set('knights_session', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.HTTPS_ENABLED === 'true',
         sameSite: 'lax',
         maxAge: sessionDays * 24 * 60 * 60,
         path: '/',
