@@ -46,4 +46,5 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # prisma/build/index.js is the actual CLI entry point in Prisma v5
-CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy && node server.js"]
+# Use db push for dev VPS (no migration files); switch to migrate deploy + migrations on prod
+CMD ["sh", "-c", "node node_modules/prisma/build/index.js db push --accept-data-loss && node server.js"]

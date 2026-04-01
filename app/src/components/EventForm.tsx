@@ -88,7 +88,7 @@ export function EventForm({ teams = [], initial }: EventFormProps) {
       startTime: form.startTime,
       endTime: form.endTime || undefined,
       location: form.location || undefined,
-      opponent: form.type === 'GAME' ? (opponentTeam?.name ?? form.opponentFreeText || undefined) : undefined,
+      opponent: form.type === 'GAME' ? ((opponentTeam?.name ?? form.opponentFreeText) || undefined) : undefined,
       opponentTeamId: form.type === 'GAME' && form.opponentTeamId ? form.opponentTeamId : undefined,
       homeAway: form.type === 'GAME' ? (form.homeAway as 'HOME' | 'AWAY') : undefined,
       notes: form.notes || undefined,
