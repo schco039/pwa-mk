@@ -184,11 +184,7 @@ export default async function CoachEventDetailPage({ params }: { params: Promise
             <h2 className="font-display text-lg font-semibold text-mk-gold mb-4 uppercase tracking-wide">
               Game Roster
             </h2>
-            {user.role !== 'PLAYER' ? (
-              <GameRosterEditor eventId={id} allPlayers={allPlayers} />
-            ) : (
-              <GameRosterView eventId={id} />
-            )}
+            <GameRosterEditor eventId={id} allPlayers={allPlayers} />
           </div>
         )}
 
