@@ -39,6 +39,8 @@ export const messagesRouter = router({
           title: `📣 ${event.title}`,
           body: input.body,
           url: `/schedule`,
+          type: 'EVENT_MESSAGE',
+          eventId: input.eventId,
         })
         pushed++
       }

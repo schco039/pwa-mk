@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { sendPushToUser } from '@/lib/push'
+import { sendPushToUser, getPushSettings } from '@/lib/push'
 import { EventType, EventStatus } from '@prisma/client'
 import { addHours } from 'date-fns'
 
@@ -11,6 +11,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const settings = await getPushSettings()
   const now = new Date()
   const in48h = addHours(now, 48)
 
@@ -39,18 +40,20 @@ export async function GET(request: Request) {
         select: { id: true },
       })
 
-      if (event.type === EventType.TRAINING) {
+      if (event.type === EventType.TRAINING && settings.training24h) {
         for (const player of noRsvpPlayers) {
           await sendPushToUser(player.id, {
             title: 'Training tomorrow 🏈',
             body: `${event.title} at ${event.startTime}${event.location ? ` — ${event.location}` : ''}. Are you coming?`,
             url: '/schedule',
+            type: 'TRAINING_24H',
+            eventId: event.id,
           })
           sent++
         }
       }
 
-      if (event.type === EventType.GAME) {
+      if (event.type === EventType.GAME && settings.game24h) {
         const opponent = event.opponent ?? 'Unknown'
         const location = event.homeAway === 'HOME' ? 'Home' : event.location ?? 'Away'
         for (const player of noRsvpPlayers) {
@@ -58,6 +61,8 @@ export async function GET(request: Request) {
             title: 'Game tomorrow 🏆',
             body: `vs ${opponent} — ${event.startTime} · ${location}. Are you in?`,
             url: '/schedule',
+            type: 'GAME_24H',
+            eventId: event.id,
           })
           sent++
         }
@@ -65,7 +70,7 @@ export async function GET(request: Request) {
     }
 
     // ── 2h reminder (trainings only — players who said YES) ─────────────────
-    if (event.type === EventType.TRAINING && hoursUntil >= 1.5 && hoursUntil <= 2.5) {
+    if (event.type === EventType.TRAINING && hoursUntil >= 1.5 && hoursUntil <= 2.5 && settings.training2h) {
       const yesPlayers = await prisma.rsvp.findMany({
         where: { eventId: event.id, status: 'YES' },
         select: { userId: true },
@@ -75,6 +80,8 @@ export async function GET(request: Request) {
           title: 'Training in 2 hours 🏈',
           body: `${event.title} at ${event.startTime}${event.location ? ` — ${event.location}` : ''}`,
           url: '/schedule',
+          type: 'TRAINING_2H',
+          eventId: event.id,
         })
         sent++
       }

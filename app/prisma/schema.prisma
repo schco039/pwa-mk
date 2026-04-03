@@ -231,6 +231,34 @@ model MvpVote {
   @@index([eventId])
 }
 
+enum PushType {
+  TRAINING_24H
+  TRAINING_2H
+  GAME_24H
+  EVENT_MESSAGE
+}
+
+model PushLog {
+  id          String    @id @default(cuid())
+  type        PushType
+  recipientId String?   // null = broadcast / multiple
+  eventId     String?
+  title       String
+  body        String
+  sentAt      DateTime  @default(now())
+
+  @@index([sentAt])
+  @@index([type])
+}
+
+model PushSetting {
+  id           String  @id @default("singleton")
+  training24h  Boolean @default(true)
+  training2h   Boolean @default(true)
+  game24h      Boolean @default(true)
+  eventMessage Boolean @default(true)
+}
+
 model PushSubscription {
   id        String   @id @default(cuid())
   userId    String

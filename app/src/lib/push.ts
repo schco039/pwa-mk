@@ -1,5 +1,6 @@
 import webpush from 'web-push'
 import { prisma } from './prisma'
+import { PushType } from '@prisma/client'
 
 function getWebPush() {
   if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
@@ -17,12 +18,28 @@ export interface PushPayload {
   title: string
   body: string
   url?: string
+  type?: PushType
+  eventId?: string
+}
+
+/** Get push settings (singleton row, create with defaults if missing) */
+export async function getPushSettings() {
+  return prisma.pushSetting.upsert({
+    where: { id: 'singleton' },
+    create: { id: 'singleton' },
+    update: {},
+  })
 }
 
 /** Send a push notification to a single user (all their subscriptions) */
 export async function sendPushToUser(userId: string, payload: PushPayload) {
   const subs = await prisma.pushSubscription.findMany({ where: { userId } })
   await sendPushToSubscriptions(subs, payload)
+  if (payload.type) {
+    await prisma.pushLog.create({
+      data: { type: payload.type, recipientId: userId, eventId: payload.eventId ?? null, title: payload.title, body: payload.body },
+    }).catch(() => {}) // non-blocking
+  }
 }
 
 /** Send a push notification to all users with a given role (or all roles) */
