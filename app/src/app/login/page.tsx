@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
+import Image from 'next/image'
 import { validateSession } from '@/lib/auth'
 import { LoginForm } from './LoginForm'
 
@@ -16,14 +17,18 @@ export default async function LoginPage() {
     <main className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
       {/* Logo / Header */}
       <div className="mb-10 text-center">
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-mk-navy border-2 border-mk-gold mb-6">
-          {/* Shield placeholder — replace with actual SVG crest */}
-          <svg viewBox="0 0 40 48" className="w-10 h-12 fill-mk-gold" aria-hidden>
-            <path d="M20 0L0 8v18c0 11 8.5 20.5 20 22 11.5-1.5 20-11 20-22V8L20 0z" />
-          </svg>
+        <div className="flex justify-center mb-5">
+          <Image
+            src="/icons/logo-source.png"
+            alt="Mamer Knights"
+            width={120}
+            height={120}
+            className="drop-shadow-[0_0_24px_rgba(212,168,67,0.4)]"
+            priority
+          />
         </div>
-        <h1 className="font-display text-4xl font-bold tracking-widest text-mk-gold uppercase">
-          Mamer Knights
+        <h1 className="font-display text-4xl font-bold tracking-widest uppercase">
+          <span className="text-white">Mamer </span><span className="text-mk-gold">Knights</span>
         </h1>
         <p className="mt-1 text-white/50 text-sm tracking-wide">Team App</p>
       </div>
