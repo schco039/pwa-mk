@@ -42,7 +42,8 @@ export function PushAdminPanel() {
     onSuccess: () => utils.pushAdmin.getSettings.invalidate(),
   })
 
-  function toggle(key: keyof typeof settings, current: boolean) {
+  type SettingKey = 'training24h' | 'training2h' | 'game24h' | 'eventMessage'
+  function toggle(key: SettingKey, current: boolean) {
     update.mutate({ [key]: !current })
   }
 
