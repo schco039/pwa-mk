@@ -292,5 +292,7 @@ export const de: Translations = {
     description: 'Füge Mamer Knights zu deinem Startbildschirm hinzu für das beste Erlebnis.',
     button: 'Installieren',
     dismiss: 'Nicht jetzt',
+    iosHint: 'Tippe auf Teilen, dann auf „Zum Home-Bildschirm".',
+    manualHint: 'Nutze das Browsermenü um die App zum Startbildschirm hinzuzufügen.',
   },
 }

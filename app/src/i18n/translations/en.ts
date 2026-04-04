@@ -290,6 +290,8 @@ export const en = {
     description: 'Add Mamer Knights to your home screen for the best experience.',
     button: 'Install',
     dismiss: 'Not now',
+    iosHint: 'Tap the share button, then "Add to Home Screen".',
+    manualHint: 'Use your browser menu to add this app to your home screen.',
   },
 } as const
 

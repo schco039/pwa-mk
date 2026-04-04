@@ -63,7 +63,7 @@ interface AppNavProps {
 export function AppNav({ userName, role }: AppNavProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const { t, locale, setLocale } = useI18n()
+  const { t } = useI18n()
   const logout = trpc.auth.logout.useMutation({
     onSuccess: () => router.push('/login'),
   })
@@ -111,19 +111,6 @@ export function AppNav({ userName, role }: AppNavProps) {
           </Link>
           <div className="flex items-center gap-4">
             <span className="text-white/40 text-sm hidden sm:block">{userName}</span>
-            <div className="flex gap-1">
-              {(['en', 'de', 'fr'] as const).map((l) => (
-                <button
-                  key={l}
-                  onClick={() => setLocale(l)}
-                  className={`text-[10px] px-1.5 py-0.5 rounded font-display uppercase transition-colors ${
-                    locale === l ? 'bg-mk-gold text-mk-navy' : 'text-white/30 hover:text-white/60'
-                  }`}
-                >
-                  {l.toUpperCase()}
-                </button>
-              ))}
-            </div>
             <button
               onClick={() => logout.mutate()}
               disabled={logout.isPending}

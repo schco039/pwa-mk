@@ -292,5 +292,7 @@ export const fr: Translations = {
     description: 'Ajoutez Mamer Knights à votre écran d\'accueil pour une meilleure expérience.',
     button: 'Installer',
     dismiss: 'Pas maintenant',
+    iosHint: 'Appuyez sur Partager, puis « Sur l\'écran d\'accueil ».',
+    manualHint: 'Utilisez le menu du navigateur pour ajouter l\'appli à l\'écran d\'accueil.',
   },
 }
