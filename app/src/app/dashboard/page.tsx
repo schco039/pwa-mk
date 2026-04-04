@@ -7,8 +7,12 @@ import { AppNav } from '@/components/AppNav'
 import { RsvpButton } from '@/components/RsvpButton'
 import { EventType, EventStatus } from '@prisma/client'
 import { format } from 'date-fns'
+import { getLocale, getT } from '@/i18n'
 
 export default async function DashboardPage() {
+  const locale = await getLocale()
+  const t = getT(locale)
+
   const cookieStore = await cookies()
   const token = cookieStore.get('knights_session')?.value
   if (!token) redirect('/login')
@@ -68,7 +72,7 @@ export default async function DashboardPage() {
       <main className="max-w-2xl mx-auto px-4 pt-6 space-y-4">
         {/* Welcome */}
         <div className="card">
-          <p className="text-white/50 text-sm uppercase tracking-widest">Welcome back</p>
+          <p className="text-white/50 text-sm uppercase tracking-widest">{t.dashboard.welcomeBack}</p>
           <h2 className="font-display text-3xl font-bold text-mk-gold mt-1">{user.name}</h2>
           <div className="flex items-center gap-3 mt-2">
             <span className="px-3 py-1 rounded-full bg-mk-navy-dark border border-white/10 text-xs uppercase tracking-widest text-white/60">
@@ -76,8 +80,8 @@ export default async function DashboardPage() {
             </span>
             {attendanceStats.rate !== null && (
               <span className="text-white/50 text-sm">
-                Attendance: <span className="text-mk-gold font-semibold">{attendanceStats.rate}%</span>
-                <span className="text-white/30 ml-1">(last 3 months)</span>
+                {t.dashboard.attendance} <span className="text-mk-gold font-semibold">{attendanceStats.rate}%</span>
+                <span className="text-white/30 ml-1">{t.dashboard.last3Months}</span>
               </span>
             )}
           </div>
@@ -86,7 +90,7 @@ export default async function DashboardPage() {
         {/* Next Training */}
         <div className="card">
           <h3 className="font-display text-lg font-semibold text-mk-gold mb-3 uppercase tracking-wide">
-            Next Training
+            {t.dashboard.nextTraining}
           </h3>
           {nextTraining ? (
             <div className="space-y-3">
@@ -106,25 +110,25 @@ export default async function DashboardPage() {
               {/* Coach RSVP summary */}
               {rsvpCounts && (
                 <div className="flex gap-4 pt-1 border-t border-white/10 text-sm">
-                  <span className="text-green-400">{rsvpCounts.yes} coming</span>
-                  <span className="text-red-400">{rsvpCounts.no} out</span>
-                  <span className="text-yellow-400">{rsvpCounts.maybe} maybe</span>
-                  <span className="text-white/30">{rsvpCounts.pending} pending</span>
+                  <span className="text-green-400">{rsvpCounts.yes} {t.dashboard.coming}</span>
+                  <span className="text-red-400">{rsvpCounts.no} {t.dashboard.out}</span>
+                  <span className="text-yellow-400">{rsvpCounts.maybe} {t.dashboard.maybe}</span>
+                  <span className="text-white/30">{rsvpCounts.pending} {t.dashboard.pending}</span>
                   <Link href={`/coach/events/${nextTraining.id}`} className="ml-auto text-mk-gold hover:underline">
-                    View details →
+                    {t.dashboard.viewDetails}
                   </Link>
                 </div>
               )}
             </div>
           ) : (
-            <p className="text-white/40 text-sm">No upcoming training scheduled.</p>
+            <p className="text-white/40 text-sm">{t.dashboard.noTrainingScheduled}</p>
           )}
         </div>
 
         {/* Next Game */}
         <div className="card">
           <h3 className="font-display text-lg font-semibold text-mk-gold mb-3 uppercase tracking-wide">
-            Next Game
+            {t.dashboard.nextGame}
           </h3>
           {nextGame ? (
             <div>
@@ -140,24 +144,24 @@ export default async function DashboardPage() {
               </span>
             </div>
           ) : (
-            <p className="text-white/40 text-sm">No upcoming games scheduled.</p>
+            <p className="text-white/40 text-sm">{t.dashboard.noGameScheduled}</p>
           )}
         </div>
 
         {/* Quick links */}
         <div className="grid grid-cols-2 gap-3">
           <Link href="/schedule" className="card flex flex-col gap-1 hover:border-mk-gold/40 transition-colors">
-            <span className="font-display text-sm uppercase tracking-wide text-mk-gold">Schedule</span>
-            <span className="text-white/40 text-xs">All events & RSVP</span>
+            <span className="font-display text-sm uppercase tracking-wide text-mk-gold">{t.dashboard.schedule}</span>
+            <span className="text-white/40 text-xs">{t.dashboard.allEventsRsvp}</span>
           </Link>
           <Link href="/stats" className="card flex flex-col gap-1 hover:border-mk-gold/40 transition-colors">
-            <span className="font-display text-sm uppercase tracking-wide text-mk-gold">My Stats</span>
-            <span className="text-white/40 text-xs">Attendance history</span>
+            <span className="font-display text-sm uppercase tracking-wide text-mk-gold">{t.dashboard.myStats}</span>
+            <span className="text-white/40 text-xs">{t.dashboard.attendanceHistory}</span>
           </Link>
           {user.role === 'COMITE' && (
             <Link href="/coach/events/new" className="card flex flex-col gap-1 hover:border-mk-gold/40 transition-colors col-span-2">
-              <span className="font-display text-sm uppercase tracking-wide text-mk-gold">+ Create Event</span>
-              <span className="text-white/40 text-xs">Add training, game or event</span>
+              <span className="font-display text-sm uppercase tracking-wide text-mk-gold">{t.dashboard.createEvent}</span>
+              <span className="text-white/40 text-xs">{t.dashboard.addEvent}</span>
             </Link>
           )}
         </div>

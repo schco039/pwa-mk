@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
+import { useT } from '@/i18n/client'
 
 interface Player {
   id: string
@@ -18,6 +19,7 @@ interface AttendanceFormProps {
 
 export function AttendanceForm({ eventId, players, existingAttendance }: AttendanceFormProps) {
   const router = useRouter()
+  const t = useT()
   const [attendance, setAttendance] = useState<Record<string, boolean>>(existingAttendance)
 
   const record = trpc.attendance.record.useMutation({
@@ -45,12 +47,12 @@ export function AttendanceForm({ eventId, players, existingAttendance }: Attenda
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-white/60 text-sm">
-          <span className="text-green-400 font-semibold">{presentCount}</span> / {players.length} present
+          {t.attendance.presentCount.replace('{count}', String(presentCount)).replace('{total}', String(players.length))}
         </p>
         <div className="flex gap-2">
-          <button onClick={() => markAll(true)} className="text-xs text-green-400 hover:underline">All present</button>
+          <button onClick={() => markAll(true)} className="text-xs text-green-400 hover:underline">{t.attendance.allPresent}</button>
           <span className="text-white/20">·</span>
-          <button onClick={() => markAll(false)} className="text-xs text-red-400 hover:underline">All absent</button>
+          <button onClick={() => markAll(false)} className="text-xs text-red-400 hover:underline">{t.attendance.allAbsent}</button>
         </div>
       </div>
 
@@ -91,7 +93,7 @@ export function AttendanceForm({ eventId, players, existingAttendance }: Attenda
         disabled={record.isPending}
         className="btn-primary w-full"
       >
-        {record.isPending ? 'Saving...' : 'Save Attendance'}
+        {record.isPending ? t.common.saving : t.attendance.saveAttendance}
       </button>
     </div>
   )

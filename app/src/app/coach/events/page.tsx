@@ -6,8 +6,11 @@ import { prisma } from '@/lib/prisma'
 import { AppNav } from '@/components/AppNav'
 import { EventStatus } from '@prisma/client'
 import { format } from 'date-fns'
+import { getLocale, getT } from '@/i18n'
 
 export default async function CoachEventsPage() {
+  const locale = await getLocale()
+  const t = getT(locale)
   const cookieStore = await cookies()
   const token = cookieStore.get('knights_session')?.value
   if (!token) redirect('/login')
@@ -38,7 +41,7 @@ export default async function CoachEventsPage() {
             {event.category === 'FLAG' && <span className="text-xs text-orange-400 border border-orange-400/30 rounded px-1">🏴 Flag</span>}
             {event.category === 'TACKLE' && <span className="text-xs text-blue-400 border border-blue-400/30 rounded px-1">🏈 Tackle</span>}
             {event.status === EventStatus.CANCELLED && (
-              <span className="text-xs text-red-400">Cancelled</span>
+              <span className="text-xs text-red-400">{t.common.cancelled}</span>
             )}
           </div>
           <p className="text-white font-semibold truncate">{event.title}</p>
@@ -57,27 +60,27 @@ export default async function CoachEventsPage() {
       <AppNav userName={user.name} role={user.role} />
       <main className="max-w-2xl mx-auto px-4 pt-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="font-display text-2xl font-bold text-mk-gold uppercase tracking-widest">Events</h1>
+          <h1 className="font-display text-2xl font-bold text-mk-gold uppercase tracking-widest">{t.events.title}</h1>
           <div className="flex gap-2">
-            <Link href="/coach/events/bulk" className="btn-ghost text-sm py-2">Bulk edit</Link>
-            <Link href="/coach/events/new" className="btn-primary text-sm py-2">+ New</Link>
+            <Link href="/coach/events/bulk" className="btn-ghost text-sm py-2">{t.events.bulkEdit}</Link>
+            <Link href="/coach/events/new" className="btn-primary text-sm py-2">{t.events.newEvent}</Link>
           </div>
         </div>
 
         <section className="space-y-2">
-          <h2 className="font-display text-sm uppercase tracking-widest text-white/40">Upcoming</h2>
-          {upcoming.length === 0 && <p className="text-white/30 text-sm">None scheduled.</p>}
+          <h2 className="font-display text-sm uppercase tracking-widest text-white/40">{t.events.upcoming}</h2>
+          {upcoming.length === 0 && <p className="text-white/30 text-sm">{t.schedule.noneScheduled}</p>}
           {upcoming.map((e) => <EventRow key={e.id} event={e} />)}
         </section>
 
         <section className="space-y-2">
-          <h2 className="font-display text-sm uppercase tracking-widest text-white/40">Past</h2>
+          <h2 className="font-display text-sm uppercase tracking-widest text-white/40">{t.events.past}</h2>
           {past.slice(0, 20).map((e) => <EventRow key={e.id} event={e} />)}
         </section>
 
         {cancelled.length > 0 && (
           <section className="space-y-2">
-            <h2 className="font-display text-sm uppercase tracking-widest text-white/40">Cancelled</h2>
+            <h2 className="font-display text-sm uppercase tracking-widest text-white/40">{t.common.cancelled}</h2>
             {cancelled.map((e) => <EventRow key={e.id} event={e} />)}
           </section>
         )}

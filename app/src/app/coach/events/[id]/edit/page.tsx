@@ -5,9 +5,12 @@ import { prisma } from '@/lib/prisma'
 import { AppNav } from '@/components/AppNav'
 import { EventForm } from '@/components/EventForm'
 import { format } from 'date-fns'
+import { getLocale, getT } from '@/i18n'
 
 export default async function EditEventPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  const locale = await getLocale()
+  const t = getT(locale)
   const cookieStore = await cookies()
   const token = cookieStore.get('knights_session')?.value
   if (!token) redirect('/login')
@@ -25,7 +28,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
       <AppNav userName={user.name} role={user.role} />
       <main className="max-w-2xl mx-auto px-4 pt-6">
         <h1 className="font-display text-2xl font-bold text-mk-gold uppercase tracking-widest mb-6">
-          Edit Event
+          {t.events.editEvent}
         </h1>
         <EventForm
           teams={teams}

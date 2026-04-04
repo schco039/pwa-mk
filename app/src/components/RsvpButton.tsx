@@ -2,6 +2,7 @@
 
 import { trpc } from '@/lib/trpc'
 import { useRouter } from 'next/navigation'
+import { useT } from '@/i18n/client'
 
 interface RsvpButtonProps {
   eventId: string
@@ -11,15 +12,16 @@ interface RsvpButtonProps {
 
 export function RsvpButton({ eventId, currentStatus, allowMaybe = false }: RsvpButtonProps) {
   const router = useRouter()
+  const t = useT()
   const setRsvp = trpc.rsvp.set.useMutation({
     onSuccess: () => router.refresh(),
   })
 
   const options = [
-    { status: 'YES' as const, label: "I'm coming", className: 'bg-green-600 text-white hover:bg-green-500' },
-    { status: 'NO' as const, label: "Can't make it", className: 'bg-red-700/80 text-white hover:bg-red-600' },
+    { status: 'YES' as const, label: t.rsvp.imComing, className: 'bg-green-600 text-white hover:bg-green-500' },
+    { status: 'NO' as const, label: t.rsvp.cantMakeIt, className: 'bg-red-700/80 text-white hover:bg-red-600' },
     ...(allowMaybe
-      ? [{ status: 'MAYBE' as const, label: 'Maybe', className: 'bg-white/10 text-white hover:bg-white/20' }]
+      ? [{ status: 'MAYBE' as const, label: t.rsvp.maybe, className: 'bg-white/10 text-white hover:bg-white/20' }]
       : []),
   ]
 

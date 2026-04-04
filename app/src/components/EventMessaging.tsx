@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { trpc } from '@/lib/trpc'
 import { format } from 'date-fns'
+import { useT } from '@/i18n/client'
 
 interface Props {
   eventId: string
@@ -11,6 +12,7 @@ interface Props {
 
 export function EventMessaging({ eventId, canSend }: Props) {
   const [body, setBody] = useState('')
+  const t = useT()
   const utils = trpc.useUtils()
 
   const { data: messages = [], isLoading } = trpc.messages.list.useQuery({ eventId })
@@ -24,11 +26,10 @@ export function EventMessaging({ eventId, canSend }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* Messages list */}
       {isLoading ? (
-        <p className="text-white/30 text-sm">Loading…</p>
+        <p className="text-white/30 text-sm">{t.common.loading}</p>
       ) : messages.length === 0 ? (
-        <p className="text-white/30 text-sm">No messages yet.</p>
+        <p className="text-white/30 text-sm">{t.messages.noMessages}</p>
       ) : (
         <div className="space-y-3">
           {messages.map((msg) => (
@@ -45,13 +46,12 @@ export function EventMessaging({ eventId, canSend }: Props) {
         </div>
       )}
 
-      {/* Compose (COMITE / COACH only) */}
       {canSend && (
         <div className="space-y-2">
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            placeholder="Message to all YES RSVPs…"
+            placeholder={t.messages.placeholder}
             maxLength={500}
             rows={3}
             className="input w-full resize-none text-sm"
@@ -63,7 +63,7 @@ export function EventMessaging({ eventId, canSend }: Props) {
               disabled={!body.trim() || send.isPending}
               className="btn-primary text-sm py-1.5 px-4 disabled:opacity-40"
             >
-              {send.isPending ? 'Sending…' : 'Send Push'}
+              {send.isPending ? t.messages.sending : t.messages.sendPush}
             </button>
           </div>
           {send.isError && (

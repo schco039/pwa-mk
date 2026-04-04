@@ -4,8 +4,11 @@ import { validateSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { AppNav } from '@/components/AppNav'
 import { TeamForm } from '@/components/TeamForm'
+import { getLocale, getT } from '@/i18n'
 
 export default async function EditTeamPage({ params }: { params: Promise<{ id: string }> }) {
+  const locale = await getLocale()
+  const t = getT(locale)
   const { id } = await params
   const cookieStore = await cookies()
   const token = cookieStore.get('knights_session')?.value
@@ -20,7 +23,7 @@ export default async function EditTeamPage({ params }: { params: Promise<{ id: s
     <div className="min-h-[100dvh] pb-[calc(7rem+env(safe-area-inset-bottom,0px))]">
       <AppNav userName={user.name} role={user.role} />
       <main className="max-w-2xl mx-auto px-4 pt-6">
-        <h1 className="font-display text-2xl font-bold text-mk-gold uppercase tracking-widest mb-6">Edit Team</h1>
+        <h1 className="font-display text-2xl font-bold text-mk-gold uppercase tracking-widest mb-6">{t.teams.editTeam}</h1>
         <TeamForm initial={team} />
       </main>
     </div>

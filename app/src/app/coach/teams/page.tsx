@@ -1,13 +1,15 @@
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
-import Image from 'next/image'
 import { validateSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { AppNav } from '@/components/AppNav'
 import { DeleteTeamButton } from '@/components/DeleteTeamButton'
+import { getLocale, getT } from '@/i18n'
 
 export default async function TeamsPage() {
+  const locale = await getLocale()
+  const t = getT(locale)
   const cookieStore = await cookies()
   const token = cookieStore.get('knights_session')?.value
   if (!token) redirect('/login')
@@ -24,12 +26,12 @@ export default async function TeamsPage() {
       <AppNav userName={user.name} role={user.role} />
       <main className="max-w-2xl mx-auto px-4 pt-6 space-y-5">
         <div className="flex items-center justify-between">
-          <h1 className="font-display text-2xl font-bold text-mk-gold uppercase tracking-widest">Teams</h1>
-          <Link href="/coach/teams/new" className="btn-primary text-sm py-2">+ New Team</Link>
+          <h1 className="font-display text-2xl font-bold text-mk-gold uppercase tracking-widest">{t.teams.title}</h1>
+          <Link href="/coach/teams/new" className="btn-primary text-sm py-2">{t.teams.newTeam}</Link>
         </div>
 
         {teams.length === 0 && (
-          <div className="card text-white/40 text-sm">No teams yet. Add opponent teams here.</div>
+          <div className="card text-white/40 text-sm">{t.teams.noTeams}</div>
         )}
 
         <div className="space-y-3">
@@ -52,7 +54,7 @@ export default async function TeamsPage() {
               </div>
               <div className="flex gap-2 flex-shrink-0">
                 <Link href={`/coach/teams/${team.id}/edit`} className="text-white/40 hover:text-mk-gold text-xs uppercase tracking-wide">
-                  Edit
+                  {t.common.edit}
                 </Link>
                 <DeleteTeamButton teamId={team.id} teamName={team.name} />
               </div>

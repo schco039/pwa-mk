@@ -3,8 +3,10 @@
 import { useState } from 'react'
 import { trpc } from '@/lib/trpc'
 import { format } from 'date-fns'
+import { useT } from '@/i18n/client'
 
 export function AbsenceManager() {
+  const t = useT()
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
   const [reason, setReason] = useState('')
@@ -29,9 +31,9 @@ export function AbsenceManager() {
     <div className="space-y-4">
       {/* Absence list */}
       {isLoading ? (
-        <p className="text-white/30 text-sm">Loading…</p>
+        <p className="text-white/30 text-sm">{t.common.loading}</p>
       ) : absences.length === 0 ? (
-        <p className="text-white/30 text-sm">No absences registered.</p>
+        <p className="text-white/30 text-sm">{t.absences.noAbsences}</p>
       ) : (
         <div className="space-y-2">
           {absences.map((a) => (
@@ -47,7 +49,7 @@ export function AbsenceManager() {
                 disabled={remove.isPending}
                 className="text-red-400/70 hover:text-red-400 text-xs flex-shrink-0 disabled:opacity-40"
               >
-                Remove
+                {t.common.remove}
               </button>
             </div>
           ))}
@@ -56,10 +58,10 @@ export function AbsenceManager() {
 
       {/* Add absence form */}
       <div className="space-y-2 pt-2 border-t border-white/10">
-        <p className="text-xs uppercase tracking-widest text-white/30">Add absence</p>
+        <p className="text-xs uppercase tracking-widest text-white/30">{t.absences.addAbsence}</p>
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="text-xs text-white/40 mb-1 block">From</label>
+            <label className="text-xs text-white/40 mb-1 block">{t.absences.from}</label>
             <input
               type="date"
               value={from}
@@ -68,7 +70,7 @@ export function AbsenceManager() {
             />
           </div>
           <div>
-            <label className="text-xs text-white/40 mb-1 block">To</label>
+            <label className="text-xs text-white/40 mb-1 block">{t.absences.to}</label>
             <input
               type="date"
               value={to}
@@ -81,7 +83,7 @@ export function AbsenceManager() {
           type="text"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          placeholder="Reason (optional) — vacation, injury…"
+          placeholder={t.absences.reasonPlaceholder}
           maxLength={200}
           className="input w-full text-sm"
         />
@@ -90,7 +92,7 @@ export function AbsenceManager() {
           disabled={!from || !to || create.isPending}
           className="btn-primary text-sm py-1.5 px-4 disabled:opacity-40"
         >
-          {create.isPending ? 'Saving…' : 'Save'}
+          {create.isPending ? t.common.saving : t.common.save}
         </button>
         {create.isError && (
           <p className="text-red-400 text-xs">{create.error.message}</p>

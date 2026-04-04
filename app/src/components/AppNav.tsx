@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
 import { useRouter } from 'next/navigation'
+import { useI18n } from '@/i18n/client'
 
 interface NavItem {
   href: string
@@ -54,33 +55,6 @@ const DocIcon = () => (
   </svg>
 )
 
-const playerNavItems: NavItem[] = [
-  { href: '/dashboard', label: 'Home', icon: <HomeIcon /> },
-  { href: '/schedule', label: 'Schedule', icon: <CalendarIcon /> },
-  { href: '/documents', label: 'Docs', icon: <DocIcon /> },
-  { href: '/stats', label: 'My Stats', icon: <StatsIcon /> },
-]
-
-// COACH: limited — trainings, schedule, team stats, docs
-const coachNavItems: NavItem[] = [
-  { href: '/dashboard', label: 'Home', icon: <HomeIcon /> },
-  { href: '/schedule', label: 'Schedule', icon: <CalendarIcon /> },
-  { href: '/coach/trainings', label: 'Trainings', icon: <ClipboardIcon /> },
-  { href: '/documents', label: 'Docs', icon: <DocIcon /> },
-  { href: '/coach/stats', label: 'Team', icon: <TeamIcon /> },
-]
-
-// COMITE: full access
-const comiteNavItems: NavItem[] = [
-  { href: '/dashboard', label: 'Home', icon: <HomeIcon /> },
-  { href: '/schedule', label: 'Schedule', icon: <CalendarIcon /> },
-  { href: '/coach/events', label: 'Events', icon: <ClipboardIcon /> },
-  { href: '/coach/documents', label: 'Docs', icon: <DocIcon /> },
-  { href: '/coach/push', label: 'Push', icon: <BellIcon /> },
-  { href: '/coach/stats', label: 'Team', icon: <TeamIcon /> },
-  { href: '/coach/teams', label: 'Teams', icon: <ShieldIcon /> },
-]
-
 interface AppNavProps {
   userName: string
   role: string
@@ -89,9 +63,37 @@ interface AppNavProps {
 export function AppNav({ userName, role }: AppNavProps) {
   const pathname = usePathname()
   const router = useRouter()
+  const { t, locale, setLocale } = useI18n()
   const logout = trpc.auth.logout.useMutation({
     onSuccess: () => router.push('/login'),
   })
+
+  const playerNavItems: NavItem[] = [
+    { href: '/dashboard', label: t.nav.home, icon: <HomeIcon /> },
+    { href: '/schedule', label: t.nav.schedule, icon: <CalendarIcon /> },
+    { href: '/documents', label: t.nav.docs, icon: <DocIcon /> },
+    { href: '/stats', label: t.nav.myStats, icon: <StatsIcon /> },
+  ]
+
+  // COACH: limited — trainings, schedule, team stats, docs
+  const coachNavItems: NavItem[] = [
+    { href: '/dashboard', label: t.nav.home, icon: <HomeIcon /> },
+    { href: '/schedule', label: t.nav.schedule, icon: <CalendarIcon /> },
+    { href: '/coach/trainings', label: t.nav.trainings, icon: <ClipboardIcon /> },
+    { href: '/documents', label: t.nav.docs, icon: <DocIcon /> },
+    { href: '/coach/stats', label: t.nav.team, icon: <TeamIcon /> },
+  ]
+
+  // COMITE: full access
+  const comiteNavItems: NavItem[] = [
+    { href: '/dashboard', label: t.nav.home, icon: <HomeIcon /> },
+    { href: '/schedule', label: t.nav.schedule, icon: <CalendarIcon /> },
+    { href: '/coach/events', label: t.nav.events, icon: <ClipboardIcon /> },
+    { href: '/coach/documents', label: t.nav.docs, icon: <DocIcon /> },
+    { href: '/coach/push', label: t.nav.push, icon: <BellIcon /> },
+    { href: '/coach/stats', label: t.nav.team, icon: <TeamIcon /> },
+    { href: '/coach/teams', label: t.nav.teams, icon: <ShieldIcon /> },
+  ]
 
   const navItems = role === 'COMITE' ? comiteNavItems
     : role === 'COACH' ? coachNavItems
@@ -109,12 +111,25 @@ export function AppNav({ userName, role }: AppNavProps) {
           </Link>
           <div className="flex items-center gap-4">
             <span className="text-white/40 text-sm hidden sm:block">{userName}</span>
+            <div className="flex gap-1">
+              {(['en', 'de', 'fr'] as const).map((l) => (
+                <button
+                  key={l}
+                  onClick={() => setLocale(l)}
+                  className={`text-[10px] px-1.5 py-0.5 rounded font-display uppercase transition-colors ${
+                    locale === l ? 'bg-mk-gold text-mk-navy' : 'text-white/30 hover:text-white/60'
+                  }`}
+                >
+                  {l.toUpperCase()}
+                </button>
+              ))}
+            </div>
             <button
               onClick={() => logout.mutate()}
               disabled={logout.isPending}
               className="text-white/40 text-sm hover:text-white/70 transition-colors"
             >
-              Sign out
+              {t.common.signOut}
             </button>
           </div>
         </div>

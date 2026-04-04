@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { format } from 'date-fns'
+import { useT } from '@/i18n/client'
 
 interface Doc {
   id: string
@@ -14,10 +15,11 @@ interface Doc {
 const CATEGORY_ORDER = ['Playbook', 'Reglement', 'Trainingsplan', 'Sonstiges']
 
 export function DocumentViewer({ docs }: { docs: Doc[] }) {
+  const t = useT()
   const [openId, setOpenId] = useState<string | null>(null)
 
   if (docs.length === 0) {
-    return <p className="text-white/30 text-sm">Noch keine Dokumente verfügbar.</p>
+    return <p className="text-white/30 text-sm">{t.documents.noDocumentsAvailable}</p>
   }
 
   // Group by category
@@ -48,7 +50,7 @@ export function DocumentViewer({ docs }: { docs: Doc[] }) {
                     onClick={() => setOpenId(openId === doc.id ? null : doc.id)}
                     className="btn-ghost text-xs py-1 px-3"
                   >
-                    {openId === doc.id ? 'Schließen' : 'Öffnen'}
+                    {openId === doc.id ? t.common.close : t.common.open}
                   </button>
                   {doc.downloadable && (
                     <a

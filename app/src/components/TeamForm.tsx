@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
+import { useT } from '@/i18n/client'
 
 interface TeamFormProps {
   initial?: {
@@ -16,6 +17,7 @@ interface TeamFormProps {
 }
 
 export function TeamForm({ initial }: TeamFormProps) {
+  const t = useT()
   const router = useRouter()
   const isEdit = !!initial
   const fileRef = useRef<HTMLInputElement>(null)
@@ -70,42 +72,42 @@ export function TeamForm({ initial }: TeamFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div>
-        <label className="block text-white/60 text-sm mb-2 uppercase tracking-wide">Team Name *</label>
+        <label className="block text-white/60 text-sm mb-2 uppercase tracking-wide">{t.teamForm.name}</label>
         <input
           type="text"
           value={form.name}
           onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-          placeholder="e.g. Luxembourg Pirates"
+          placeholder={t.teamForm.namePlaceholder}
           className="input-field text-left tracking-normal"
           required
         />
       </div>
 
       <div>
-        <label className="block text-white/60 text-sm mb-2 uppercase tracking-wide">Short Name / Abbreviation</label>
+        <label className="block text-white/60 text-sm mb-2 uppercase tracking-wide">{t.teamForm.shortName}</label>
         <input
           type="text"
           value={form.shortName}
           onChange={(e) => setForm((f) => ({ ...f, shortName: e.target.value }))}
-          placeholder="e.g. LUX, PIR"
+          placeholder={t.teamForm.shortNamePlaceholder}
           className="input-field text-left tracking-normal"
           maxLength={10}
         />
       </div>
 
       <div>
-        <label className="block text-white/60 text-sm mb-2 uppercase tracking-wide">Home City / Location</label>
+        <label className="block text-white/60 text-sm mb-2 uppercase tracking-wide">{t.teamForm.city}</label>
         <input
           type="text"
           value={form.location}
           onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
-          placeholder="e.g. Luxembourg City"
+          placeholder={t.teamForm.cityPlaceholder}
           className="input-field text-left tracking-normal"
         />
       </div>
 
       <div>
-        <label className="block text-white/60 text-sm mb-2 uppercase tracking-wide">Logo</label>
+        <label className="block text-white/60 text-sm mb-2 uppercase tracking-wide">{t.teamForm.logo}</label>
         <div className="flex items-center gap-3">
           {form.logoUrl && (
             <img src={form.logoUrl} alt="preview" className="w-14 h-14 object-contain rounded-lg bg-white/5 flex-shrink-0" />
@@ -117,7 +119,7 @@ export function TeamForm({ initial }: TeamFormProps) {
               disabled={uploading}
               className="btn-ghost text-sm py-2 w-full"
             >
-              {uploading ? 'Uploading...' : form.logoUrl ? 'Replace image' : 'Upload image'}
+              {uploading ? t.teamForm.uploading : form.logoUrl ? t.teamForm.replaceImage : t.teamForm.uploadImage}
             </button>
             <input
               ref={fileRef}
@@ -130,7 +132,7 @@ export function TeamForm({ initial }: TeamFormProps) {
               type="url"
               value={form.logoUrl}
               onChange={(e) => setForm((f) => ({ ...f, logoUrl: e.target.value }))}
-              placeholder="or paste URL https://..."
+              placeholder={t.teamForm.urlPlaceholder}
               className="input-field text-left tracking-normal text-sm py-2"
             />
           </div>
@@ -139,12 +141,12 @@ export function TeamForm({ initial }: TeamFormProps) {
       </div>
 
       <div>
-        <label className="block text-white/60 text-sm mb-2 uppercase tracking-wide">Notes</label>
+        <label className="block text-white/60 text-sm mb-2 uppercase tracking-wide">{t.teamForm.notes}</label>
         <textarea
           value={form.notes}
           onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
           rows={2}
-          placeholder="Optional notes..."
+          placeholder={t.teamForm.notesPlaceholder}
           className="input-field text-left tracking-normal resize-none"
         />
       </div>
@@ -153,9 +155,9 @@ export function TeamForm({ initial }: TeamFormProps) {
 
       <div className="flex gap-3">
         <button type="submit" disabled={isPending} className="btn-primary flex-1">
-          {isPending ? 'Saving...' : isEdit ? 'Save Changes' : 'Create Team'}
+          {isPending ? t.common.saving : isEdit ? t.eventForm.saveChanges : t.teamForm.createTeam}
         </button>
-        <button type="button" onClick={() => router.back()} className="btn-ghost">Cancel</button>
+        <button type="button" onClick={() => router.back()} className="btn-ghost">{t.common.cancel}</button>
       </div>
     </form>
   )

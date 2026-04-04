@@ -3,8 +3,11 @@ import { cookies } from 'next/headers'
 import { validateSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { AppNav } from '@/components/AppNav'
+import { getLocale, getT } from '@/i18n'
 
 export default async function CoachStatsPage() {
+  const locale = await getLocale()
+  const t = getT(locale)
   const cookieStore = await cookies()
   const token = cookieStore.get('knights_session')?.value
   if (!token) redirect('/login')
@@ -44,20 +47,19 @@ export default async function CoachStatsPage() {
     <div className="min-h-[100dvh] pb-[calc(7rem+env(safe-area-inset-bottom,0px))]">
       <AppNav userName={user.name} role={user.role} />
       <main className="max-w-2xl mx-auto px-4 pt-6 space-y-5">
-        <h1 className="font-display text-2xl font-bold text-mk-gold uppercase tracking-widest">Team Stats</h1>
+        <h1 className="font-display text-2xl font-bold text-mk-gold uppercase tracking-widest">{t.stats.teamStats}</h1>
 
-        {/* Team overview */}
         <div className="card text-center">
           <p className="text-5xl font-display font-bold text-mk-gold">{teamRate !== null ? `${teamRate}%` : '—'}</p>
-          <p className="text-white/50 text-sm mt-1">Team attendance</p>
-          <p className="text-white/30 text-xs">{teamPresent} / {teamTotal} · last 3 months</p>
+          <p className="text-white/50 text-sm mt-1">{t.stats.teamAttendance}</p>
+          <p className="text-white/30 text-xs">{teamPresent} / {teamTotal} · {t.stats.last3Months}</p>
         </div>
 
         {/* Per-player table */}
         <div className="card space-y-1">
-          <h2 className="font-display text-sm uppercase tracking-widest text-white/40 mb-3">By Player</h2>
+          <h2 className="font-display text-sm uppercase tracking-widest text-white/40 mb-3">{t.stats.byPlayer}</h2>
           {players.length === 0 && (
-            <p className="text-white/30 text-sm">No attendance data yet.</p>
+            <p className="text-white/30 text-sm">{t.stats.noAttendanceData}</p>
           )}
           {players.map((p) => (
             <div key={p.user.id} className="flex items-center gap-3 py-2 border-b border-white/5 last:border-0">

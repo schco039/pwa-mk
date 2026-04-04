@@ -3,11 +3,13 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
+import { useT } from '@/i18n/client'
 
 type Step = 'email' | 'otp'
 
 export function LoginForm() {
   const router = useRouter()
+  const t = useT()
   const [step, setStep] = useState<Step>('email')
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
@@ -36,8 +38,8 @@ export function LoginForm() {
       {step === 'email' ? (
         <>
           <div className="text-center">
-            <h2 className="font-display text-xl font-semibold tracking-wide">Sign In</h2>
-            <p className="mt-1 text-white/50 text-sm">Enter your team email to receive a login code</p>
+            <h2 className="font-display text-xl font-semibold tracking-wide">{t.login.signIn}</h2>
+            <p className="mt-1 text-white/50 text-sm">{t.login.enterEmail}</p>
           </div>
 
           <form
@@ -55,7 +57,7 @@ export function LoginForm() {
                 type="email"
                 required
                 autoComplete="email"
-                placeholder="your@email.com"
+                placeholder={t.login.emailPlaceholder}
                 className="input-field tracking-normal text-left"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -65,16 +67,16 @@ export function LoginForm() {
             {error && <p className="text-red-400 text-sm text-center">{error}</p>}
 
             <button type="submit" className="btn-primary w-full" disabled={isPending}>
-              {isPending ? 'Sending…' : 'Send login code'}
+              {isPending ? t.login.sending : t.login.sendCode}
             </button>
           </form>
         </>
       ) : (
         <>
           <div className="text-center">
-            <h2 className="font-display text-xl font-semibold tracking-wide">Enter your code</h2>
+            <h2 className="font-display text-xl font-semibold tracking-wide">{t.login.enterCode}</h2>
             <p className="mt-1 text-white/50 text-sm">
-              We sent a 6-digit code to{' '}
+              {t.login.codeSentTo}{' '}
               <span className="text-mk-gold">{email}</span>
             </p>
           </div>
@@ -107,7 +109,7 @@ export function LoginForm() {
             {error && <p className="text-red-400 text-sm text-center">{error}</p>}
 
             <button type="submit" className="btn-primary w-full" disabled={isPending}>
-              {isPending ? 'Verifying…' : 'Log in'}
+              {isPending ? t.login.verifying : t.login.logIn}
             </button>
 
             <button
@@ -119,7 +121,7 @@ export function LoginForm() {
                 setError(null)
               }}
             >
-              ← Use a different email
+              {t.login.differentEmail}
             </button>
           </form>
         </>

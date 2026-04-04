@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next'
 import { Oswald, Montserrat } from 'next/font/google'
 import { TrpcProvider } from '@/components/TrpcProvider'
 import { ServiceWorkerRegistrar } from '@/components/ServiceWorkerRegistrar'
+import { I18nProvider } from '@/i18n/client'
+import { getLocale } from '@/i18n'
 import './globals.css'
 
 const oswald = Oswald({
@@ -29,14 +31,17 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale()
   return (
-    <html lang="en" className={`${oswald.variable} ${montserrat.variable}`}>
+    <html lang={locale} className={`${oswald.variable} ${montserrat.variable}`}>
       <body>
         <TrpcProvider>
+          <I18nProvider locale={locale}>
             <ServiceWorkerRegistrar />
             {children}
-          </TrpcProvider>
+          </I18nProvider>
+        </TrpcProvider>
       </body>
     </html>
   )

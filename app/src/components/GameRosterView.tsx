@@ -1,17 +1,18 @@
 'use client'
 
 import { trpc } from '@/lib/trpc'
+import { useT } from '@/i18n/client'
 
 export function GameRosterView({ eventId }: { eventId: string }) {
+  const t = useT()
   const { data: roster = [], isLoading } = trpc.roster.get.useQuery({ eventId })
 
-  if (isLoading) return <p className="text-white/30 text-sm">Loading…</p>
-  if (roster.length === 0) return <p className="text-white/30 text-sm">No roster set yet.</p>
+  if (isLoading) return <p className="text-white/30 text-sm">{t.common.loading}</p>
+  if (roster.length === 0) return <p className="text-white/30 text-sm">{t.roster.noRoster}</p>
 
-  // Group by position
   const byPosition = new Map<string, typeof roster>()
   for (const r of roster) {
-    const key = r.position ?? 'No position'
+    const key = r.position ?? t.roster.noPosition
     const arr = byPosition.get(key) ?? []
     arr.push(r)
     byPosition.set(key, arr)
@@ -19,7 +20,7 @@ export function GameRosterView({ eventId }: { eventId: string }) {
 
   return (
     <div className="space-y-3">
-      <p className="text-white/40 text-xs">{roster.length} players on roster</p>
+      <p className="text-white/40 text-xs">{t.roster.playersOnRoster.replace('{count}', String(roster.length))}</p>
       {[...byPosition.entries()].map(([pos, players]) => (
         <div key={pos}>
           <p className="text-mk-gold text-xs uppercase tracking-widest mb-1">{pos}</p>

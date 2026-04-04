@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
 import { format } from 'date-fns'
+import { useT } from '@/i18n/client'
 
 type RsvpStatus = 'YES' | 'NO' | 'MAYBE' | null
 
@@ -48,7 +49,7 @@ function AvailabilityButtons({ training }: { training: Training }) {
             : 'bg-green-600/20 text-green-400 hover:bg-green-600/40'
         }`}
       >
-        ✓ Kann Training halten
+        {useT().trainings.canCoach}
       </button>
       <button
         onClick={() => setRsvp.mutate({ eventId: training.id, status: 'NO' })}
@@ -59,49 +60,50 @@ function AvailabilityButtons({ training }: { training: Training }) {
             : 'bg-red-700/20 text-red-400 hover:bg-red-700/40'
         }`}
       >
-        ✗ Kann nicht
+        {useT().trainings.cantCoach}
       </button>
     </div>
   )
 }
 
 export function TrainingCoachView({ trainings }: { trainings: Training[] }) {
+  const t = useT()
   const [filter, setFilter] = useState<'' | 'FLAG' | 'TACKLE'>('')
 
-  const filtered = filter === '' ? trainings : trainings.filter((t) => !t.category || t.category === filter)
-  const upcoming = filtered.filter((t) => !t.isPast)
-  const past = filtered.filter((t) => t.isPast)
+  const filtered = filter === '' ? trainings : trainings.filter((tr) => !tr.category || tr.category === filter)
+  const upcoming = filtered.filter((tr) => !tr.isPast)
+  const past = filtered.filter((tr) => tr.isPast)
 
-  function TrainingCard({ t }: { t: Training }) {
-    const date = new Date(t.date)
+  function TrainingCard({ training: tr }: { training: Training }) {
+    const date = new Date(tr.date)
     return (
       <div className="card space-y-2">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-              <CategoryBadge category={t.category} />
+              <CategoryBadge category={tr.category} />
             </div>
-            <p className="text-white font-semibold text-sm">{t.title}</p>
+            <p className="text-white font-semibold text-sm">{tr.title}</p>
             <p className="text-white/50 text-xs mt-0.5">
-              {format(date, 'EEE d MMM')} · {t.startTime}
-              {t.endTime && `–${t.endTime}`}
+              {format(date, 'EEE d MMM')} · {tr.startTime}
+              {tr.endTime && `–${tr.endTime}`}
             </p>
-            {t.location && <p className="text-white/30 text-xs">{t.location}</p>}
+            {tr.location && <p className="text-white/30 text-xs">{tr.location}</p>}
           </div>
-          {t.isPast && (
+          {tr.isPast && (
             <Link
-              href={`/coach/events/${t.id}`}
+              href={`/coach/events/${tr.id}`}
               className={`flex-shrink-0 text-xs px-3 py-1.5 rounded-lg font-display uppercase tracking-wide transition-colors ${
-                t.hasAttendance
+                tr.hasAttendance
                   ? 'text-white/30 border border-white/10 hover:border-white/30'
                   : 'bg-mk-gold text-mk-navy font-bold'
               }`}
             >
-              {t.hasAttendance ? 'Präsenz ✓' : 'Präsenz eintragen'}
+              {tr.hasAttendance ? t.trainings.attendanceDone : t.trainings.enterAttendance}
             </Link>
           )}
         </div>
-        {!t.isPast && <AvailabilityButtons training={t} />}
+        {!tr.isPast && <AvailabilityButtons training={tr} />}
       </div>
     )
   }
@@ -110,7 +112,7 @@ export function TrainingCoachView({ trainings }: { trainings: Training[] }) {
     <div className="space-y-8">
       {/* Category filter */}
       <div className="flex gap-2">
-        {([['', 'Alle'], ['FLAG', '🏴 Flag'], ['TACKLE', '🏈 Tackle']] as const).map(([val, label]) => (
+        {([['', t.common.all], ['FLAG', t.common.flag], ['TACKLE', t.common.tackle]] as const).map(([val, label]) => (
           <button
             key={val}
             onClick={() => setFilter(val)}
@@ -123,13 +125,13 @@ export function TrainingCoachView({ trainings }: { trainings: Training[] }) {
 
       <section>
         <h2 className="font-display text-lg font-bold uppercase tracking-widest text-blue-400 mb-3">
-          Upcoming
+          {t.events.upcoming}
         </h2>
         {upcoming.length === 0 ? (
-          <div className="card text-white/30 text-sm">Keine Trainings geplant.</div>
+          <div className="card text-white/30 text-sm">{t.trainings.noTrainings}</div>
         ) : (
           <div className="space-y-2">
-            {upcoming.map((t) => <TrainingCard key={t.id} t={t} />)}
+            {upcoming.map((tr) => <TrainingCard key={tr.id} training={tr} />)}
           </div>
         )}
       </section>
@@ -137,10 +139,10 @@ export function TrainingCoachView({ trainings }: { trainings: Training[] }) {
       {past.length > 0 && (
         <section>
           <h2 className="font-display text-lg font-bold uppercase tracking-widest text-white/30 mb-3">
-            Vergangen
+            {t.trainings.pastSection}
           </h2>
           <div className="space-y-2">
-            {past.slice().reverse().map((t) => <TrainingCard key={t.id} t={t} />)}
+            {past.slice().reverse().map((tr) => <TrainingCard key={tr.id} training={tr} />)}
           </div>
         </section>
       )}

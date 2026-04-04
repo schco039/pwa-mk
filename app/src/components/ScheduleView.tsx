@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
+import { useT } from '@/i18n/client'
 
 type RsvpStatus = 'YES' | 'NO' | 'MAYBE'
 
@@ -33,23 +34,25 @@ const DEFAULT_SHOW = 3
 
 // Category badge component
 function CategoryBadge({ category }: { category: string | null }) {
+  const t = useT()
   if (!category) return null
   return (
     <span className={`text-xs border rounded px-1.5 py-0.5 ${
       category === 'FLAG' ? 'text-orange-400 border-orange-400/30' : 'text-blue-400 border-blue-400/30'
     }`}>
-      {category === 'FLAG' ? '🏴 Flag' : '🏈 Tackle'}
+      {category === 'FLAG' ? t.common.flag : t.common.tackle}
     </span>
   )
 }
 
 function RsvpButtons({ event }: { event: ScheduleEvent }) {
+  const t = useT()
   const router = useRouter()
   const setRsvp = trpc.rsvp.set.useMutation({ onSuccess: () => router.refresh() })
   const options = [
-    { status: 'YES' as const, label: "Coming", base: 'bg-green-600 hover:bg-green-500' },
-    { status: 'NO' as const, label: "Can't", base: 'bg-red-700/80 hover:bg-red-600' },
-    ...(event.allowMaybe ? [{ status: 'MAYBE' as const, label: 'Maybe', base: 'bg-white/10 hover:bg-white/20' }] : []),
+    { status: 'YES' as const, label: t.rsvp.imComing, base: 'bg-green-600 hover:bg-green-500' },
+    { status: 'NO' as const, label: t.rsvp.cantMakeIt, base: 'bg-red-700/80 hover:bg-red-600' },
+    ...(event.allowMaybe ? [{ status: 'MAYBE' as const, label: t.rsvp.maybe, base: 'bg-white/10 hover:bg-white/20' }] : []),
   ]
   return (
     <div className="flex gap-1.5 flex-wrap">
@@ -67,6 +70,7 @@ function RsvpButtons({ event }: { event: ScheduleEvent }) {
 }
 
 function EventCard({ event, isCoach }: { event: ScheduleEvent; isCoach: boolean }) {
+  const t = useT()
   const date = new Date(event.date)
   const eventEndTime = event.endTime ?? event.startTime
   const dateStr = event.date.split('T')[0]
@@ -85,7 +89,7 @@ function EventCard({ event, isCoach }: { event: ScheduleEvent; isCoach: boolean 
           <div className="flex items-center gap-1.5 mb-1 flex-wrap">
             <CategoryBadge category={event.category} />
             {isCancelled && (
-              <span className="text-xs border rounded px-1.5 py-0.5 text-red-400 border-red-400/30">Cancelled</span>
+              <span className="text-xs border rounded px-1.5 py-0.5 text-red-400 border-red-400/30">{t.common.cancelled}</span>
             )}
           </div>
           <p className="text-white font-semibold text-sm">{displayTitle}</p>
@@ -100,12 +104,12 @@ function EventCard({ event, isCoach }: { event: ScheduleEvent; isCoach: boolean 
           </p>
           {event.location && <p className="text-white/30 text-xs">{event.location}</p>}
           {isCancelled && event.cancelReason && (
-            <p className="text-red-400/60 text-xs mt-1">Reason: {event.cancelReason}</p>
+            <p className="text-red-400/60 text-xs mt-1">{t.schedule.reason} {event.cancelReason}</p>
           )}
         </div>
         {isCoach && (
           <Link href={`/coach/events/${event.id}`} className="text-white/20 hover:text-mk-gold text-xs flex-shrink-0 transition-colors">
-            Manage
+            {t.schedule.manage}
           </Link>
         )}
       </div>
@@ -139,7 +143,7 @@ function Section({
       </div>
 
       {events.length === 0 ? (
-        <div className="card text-white/30 text-sm">None scheduled.</div>
+        <div className="card text-white/30 text-sm">{useT().schedule.noneScheduled}</div>
       ) : (
         <div className="space-y-2">
           {visible.map((e) => <EventCard key={e.id} event={e} isCoach={isCoach} />)}
@@ -148,7 +152,7 @@ function Section({
               onClick={() => setShown((s) => s + DEFAULT_SHOW)}
               className="w-full py-2 rounded-lg border border-white/10 text-white/40 text-xs font-display uppercase tracking-wide hover:border-white/30 hover:text-white/60 transition-colors"
             >
-              Show more ({events.length - shown} remaining)
+              {useT().schedule.showMore.replace('{count}', String(events.length - shown))}
             </button>
           )}
         </div>
@@ -158,6 +162,7 @@ function Section({
 }
 
 export function ScheduleView({ events, isCoach, hideTraining = false }: { events: ScheduleEvent[]; isCoach: boolean; hideTraining?: boolean }) {
+  const t = useT()
   const [trainingFilter, setTrainingFilter] = useState<'' | 'FLAG' | 'TACKLE'>('')
 
   useEffect(() => {
@@ -190,7 +195,7 @@ export function ScheduleView({ events, isCoach, hideTraining = false }: { events
   const filterUI = (
     <div className="flex gap-1.5">
       {([
-        { v: '' as const, l: 'All' },
+        { v: '' as const, l: t.common.all },
         { v: 'FLAG' as const, l: '🏴' },
         { v: 'TACKLE' as const, l: '🏈' },
       ]).map((opt) => (
@@ -209,7 +214,7 @@ export function ScheduleView({ events, isCoach, hideTraining = false }: { events
     <div className="space-y-8">
       {!hideTraining && (
         <Section
-          title="Training"
+          title={t.schedule.training}
           events={trainings}
           isCoach={isCoach}
           color="text-blue-400"
@@ -217,13 +222,13 @@ export function ScheduleView({ events, isCoach, hideTraining = false }: { events
         />
       )}
       <Section
-        title="Games"
+        title={t.schedule.games}
         events={games}
         isCoach={isCoach}
         color="text-mk-gold"
       />
       <Section
-        title="Events"
+        title={t.schedule.events}
         events={otherEvents}
         isCoach={isCoach}
         color="text-purple-400"

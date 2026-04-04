@@ -13,9 +13,12 @@ import { GameRosterView } from '@/components/GameRosterView'
 import { MvpVoting } from '@/components/MvpVoting'
 import { EventStatus } from '@prisma/client'
 import { format } from 'date-fns'
+import { getLocale, getT } from '@/i18n'
 
 export default async function CoachEventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  const locale = await getLocale()
+  const t = getT(locale)
   const cookieStore = await cookies()
   const token = cookieStore.get('knights_session')?.value
   if (!token) redirect('/login')
@@ -77,7 +80,7 @@ export default async function CoachEventDetailPage({ params }: { params: Promise
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-xs uppercase tracking-widest text-white/40">{event.type}</span>
                 {event.status === EventStatus.CANCELLED && (
-                  <span className="text-xs text-red-400 border border-red-400/30 rounded px-1">Cancelled</span>
+                  <span className="text-xs text-red-400 border border-red-400/30 rounded px-1">{t.common.cancelled}</span>
                 )}
               </div>
               <h1 className="font-display text-xl font-bold text-mk-gold">{event.title}</h1>
@@ -90,7 +93,7 @@ export default async function CoachEventDetailPage({ params }: { params: Promise
             </div>
             {user.role === 'COMITE' && (
               <div className="flex flex-col gap-2 flex-shrink-0">
-                <Link href={`/coach/events/${id}/edit`} className="btn-ghost text-sm py-1.5 px-3">Edit</Link>
+                <Link href={`/coach/events/${id}/edit`} className="btn-ghost text-sm py-1.5 px-3">{t.common.edit}</Link>
                 {event.status !== EventStatus.CANCELLED && (
                   <CancelEventButton eventId={id} />
                 )}
@@ -102,7 +105,7 @@ export default async function CoachEventDetailPage({ params }: { params: Promise
         {/* Coach availability — visible to COMITE and COACH */}
         {coachRsvps.length > 0 && (
           <div className="card">
-            <h2 className="font-display text-sm font-semibold text-white/40 mb-3 uppercase tracking-wide">Trainer Verfügbarkeit</h2>
+            <h2 className="font-display text-sm font-semibold text-white/40 mb-3 uppercase tracking-wide">{t.events.coachAvailability}</h2>
             <div className="flex flex-wrap gap-2">
               {coachRsvps.map((r) => (
                 <span key={r.id} className={`text-xs px-2 py-1 rounded border ${
@@ -120,10 +123,10 @@ export default async function CoachEventDetailPage({ params }: { params: Promise
           <h2 className="font-display text-lg font-semibold text-mk-gold mb-4 uppercase tracking-wide">RSVP</h2>
           <div className="grid grid-cols-4 gap-2 mb-4 text-center">
             {[
-              { label: 'Coming', count: yes.length, color: 'text-green-400' },
-              { label: "Can't", count: no.length, color: 'text-red-400' },
-              { label: 'Maybe', count: maybe.length, color: 'text-yellow-400' },
-              { label: 'Pending', count: pending.length, color: 'text-white/30' },
+              { label: t.rsvp.coming, count: yes.length, color: 'text-green-400' },
+              { label: t.rsvp.cant, count: no.length, color: 'text-red-400' },
+              { label: t.rsvp.maybe, count: maybe.length, color: 'text-yellow-400' },
+              { label: t.rsvp.pending, count: pending.length, color: 'text-white/30' },
             ].map((s) => (
               <div key={s.label} className="bg-mk-navy-dark rounded-lg p-2">
                 <p className={`text-2xl font-display font-bold ${s.color}`}>{s.count}</p>
@@ -136,7 +139,7 @@ export default async function CoachEventDetailPage({ params }: { params: Promise
           <div className="space-y-3">
             {yes.length > 0 && (
               <div>
-                <p className="text-green-400 text-xs uppercase tracking-widest mb-1">Coming ({yes.length})</p>
+                <p className="text-green-400 text-xs uppercase tracking-widest mb-1">{t.rsvp.comingCount.replace('{count}', String(yes.length))}</p>
                 <div className="space-y-1">
                   {yes.map((r) => (
                     <div key={r.id} className="flex items-center gap-2 text-sm text-white/80">
@@ -149,7 +152,7 @@ export default async function CoachEventDetailPage({ params }: { params: Promise
             )}
             {no.length > 0 && (
               <div>
-                <p className="text-red-400 text-xs uppercase tracking-widest mb-1">Can't make it ({no.length})</p>
+                <p className="text-red-400 text-xs uppercase tracking-widest mb-1">{t.rsvp.cantMakeItCount.replace('{count}', String(no.length))}</p>
                 <div className="space-y-1">
                   {no.map((r) => (
                     <div key={r.id} className="text-sm text-white/60">
@@ -161,7 +164,7 @@ export default async function CoachEventDetailPage({ params }: { params: Promise
             )}
             {pending.length > 0 && (
               <div>
-                <p className="text-white/30 text-xs uppercase tracking-widest mb-1">No response ({pending.length})</p>
+                <p className="text-white/30 text-xs uppercase tracking-widest mb-1">{t.rsvp.noResponse.replace('{count}', String(pending.length))}</p>
                 <div className="flex flex-wrap gap-1">
                   {pending.map((p) => (
                     <span key={p.id} className="text-xs text-white/40 bg-white/5 rounded px-2 py-0.5">{p.name}</span>
@@ -175,7 +178,7 @@ export default async function CoachEventDetailPage({ params }: { params: Promise
         {/* Absences */}
         <div className="card">
           <h2 className="font-display text-lg font-semibold text-mk-gold mb-4 uppercase tracking-wide">
-            Abwesenheiten
+            {t.events.absences}
           </h2>
           <EventAbsences eventId={id} />
         </div>
@@ -184,7 +187,7 @@ export default async function CoachEventDetailPage({ params }: { params: Promise
         {isGame && (
           <div className="card">
             <h2 className="font-display text-lg font-semibold text-mk-gold mb-4 uppercase tracking-wide">
-              Game Roster
+              {t.events.gameRoster}
             </h2>
             <GameRosterEditor eventId={id} allPlayers={allPlayers} />
           </div>
@@ -194,7 +197,7 @@ export default async function CoachEventDetailPage({ params }: { params: Promise
         {isGame && eventPast && (
           <div className="card">
             <h2 className="font-display text-lg font-semibold text-mk-gold mb-4 uppercase tracking-wide">
-              MVP Vote
+              {t.events.mvpVote}
             </h2>
             <MvpVoting eventId={id} currentUserId={user.id} isOnRoster={isOnRoster} />
           </div>
@@ -203,7 +206,7 @@ export default async function CoachEventDetailPage({ params }: { params: Promise
         {/* Messaging */}
         <div className="card">
           <h2 className="font-display text-lg font-semibold text-mk-gold mb-4 uppercase tracking-wide">
-            Messages
+            {t.events.messages}
           </h2>
           <EventMessaging
             eventId={id}
@@ -215,7 +218,7 @@ export default async function CoachEventDetailPage({ params }: { params: Promise
         {eventPast && (
           <div className="card">
             <h2 className="font-display text-lg font-semibold text-mk-gold mb-4 uppercase tracking-wide">
-              Attendance
+              {t.events.attendance}
             </h2>
             <AttendanceForm
               eventId={id}

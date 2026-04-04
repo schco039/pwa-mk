@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { trpc } from '@/lib/trpc'
+import { useT } from '@/i18n/client'
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
@@ -11,6 +12,7 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 export function PushToggle() {
+  const t = useT()
   const [supported, setSupported] = useState(false)
   const [subscribed, setSubscribed] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -79,7 +81,7 @@ export function PushToggle() {
     >
       <span className="text-xl">{subscribed ? '🔔' : '🔕'}</span>
       <span className="text-sm font-display uppercase tracking-wide">
-        {loading ? 'Loading...' : subscribed ? 'Notifications on' : 'Enable notifications'}
+        {loading ? t.common.loading : subscribed ? t.push.notificationsOn : t.push.enableNotifications}
       </span>
     </button>
   )

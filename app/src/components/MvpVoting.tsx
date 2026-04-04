@@ -1,6 +1,7 @@
 'use client'
 
 import { trpc } from '@/lib/trpc'
+import { useT } from '@/i18n/client'
 
 interface Props {
   eventId: string
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function MvpVoting({ eventId, currentUserId, isOnRoster }: Props) {
+  const t = useT()
   const utils = trpc.useUtils()
   const { data: roster = [] } = trpc.roster.get.useQuery({ eventId })
   const { data: mvp } = trpc.mvp.results.useQuery({ eventId })
@@ -17,14 +19,13 @@ export function MvpVoting({ eventId, currentUserId, isOnRoster }: Props) {
     onSuccess: () => utils.mvp.results.invalidate({ eventId }),
   })
 
-  if (roster.length === 0) return <p className="text-white/30 text-sm">No roster available for voting.</p>
+  if (roster.length === 0) return <p className="text-white/30 text-sm">{t.mvp.noRosterForVoting}</p>
 
   const winner = mvp?.results[0]
   const myVote = mvp?.myVoteNomineeId
 
   return (
     <div className="space-y-4">
-      {/* Results bar chart */}
       {mvp && mvp.results.length > 0 && (
         <div className="space-y-2">
           {mvp.results.slice(0, 5).map((r) => (
@@ -44,16 +45,15 @@ export function MvpVoting({ eventId, currentUserId, isOnRoster }: Props) {
             </div>
           ))}
           {mvp.totalVotes > 0 && (
-            <p className="text-white/30 text-xs">{mvp.totalVotes} vote{mvp.totalVotes !== 1 ? 's' : ''} total</p>
+            <p className="text-white/30 text-xs">{t.mvp.votesTotal.replace('{count}', String(mvp.totalVotes))}</p>
           )}
         </div>
       )}
 
-      {/* Vote buttons — only for roster players */}
       {isOnRoster && (
         <div>
           <p className="text-white/40 text-xs uppercase tracking-widest mb-2">
-            {myVote ? 'Change vote' : 'Cast your vote'}
+            {myVote ? t.mvp.changeVote : t.mvp.castVote}
           </p>
           <div className="flex flex-wrap gap-2">
             {roster
@@ -75,7 +75,7 @@ export function MvpVoting({ eventId, currentUserId, isOnRoster }: Props) {
           </div>
         </div>
       )}
-      {!isOnRoster && <p className="text-white/30 text-xs">Only roster players can vote.</p>}
+      {!isOnRoster && <p className="text-white/30 text-xs">{t.mvp.onlyRosterCanVote}</p>}
     </div>
   )
 }

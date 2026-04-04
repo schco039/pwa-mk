@@ -6,8 +6,11 @@ import { AppNav } from '@/components/AppNav'
 import { BulkEventManager } from '@/components/BulkEventManager'
 import { EventStatus, EventType } from '@prisma/client'
 import { addWeeks } from 'date-fns'
+import { getLocale, getT } from '@/i18n'
 
 export default async function BulkEventsPage() {
+  const locale = await getLocale()
+  const t = getT(locale)
   const cookieStore = await cookies()
   const token = cookieStore.get('knights_session')?.value
   if (!token) redirect('/login')
@@ -46,7 +49,7 @@ export default async function BulkEventsPage() {
       <AppNav userName={user.name} role={user.role} />
       <main className="max-w-2xl mx-auto px-4 pt-6">
         <h1 className="font-display text-2xl font-bold text-mk-gold uppercase tracking-widest mb-6">
-          Bulk Edit Events
+          {t.events.bulkEditEvents}
         </h1>
         <BulkEventManager events={serialized} />
       </main>

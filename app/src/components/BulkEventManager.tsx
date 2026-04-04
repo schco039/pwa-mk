@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
 import { format } from 'date-fns'
+import { useT } from '@/i18n/client'
 
 interface Event {
   id: string
@@ -24,6 +25,7 @@ const typeColor: Record<string, string> = {
 }
 
 export function BulkEventManager({ events }: { events: Event[] }) {
+  const t = useT()
   const router = useRouter()
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [typeFilter, setTypeFilter] = useState<'ALL' | 'TRAINING' | 'GAME' | 'EVENT'>('TRAINING')
@@ -120,9 +122,9 @@ export function BulkEventManager({ events }: { events: Event[] }) {
         {(typeFilter === 'TRAINING' || typeFilter === 'GAME' || typeFilter === 'ALL') && (
           <div className="flex gap-2">
             {([
-              { v: '' as const, l: 'All categories' },
-              { v: 'FLAG' as const, l: '🏴 Flag' },
-              { v: 'TACKLE' as const, l: '🏈 Tackle' },
+              { v: '' as const, l: t.common.all },
+              { v: 'FLAG' as const, l: t.common.flag },
+              { v: 'TACKLE' as const, l: t.common.tackle },
             ]).map((opt) => (
               <button key={opt.v} onClick={() => { setCategoryFilter(opt.v); setSelected(new Set()) }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-display uppercase tracking-wide border transition-colors ${
@@ -138,20 +140,20 @@ export function BulkEventManager({ events }: { events: Event[] }) {
       {selected.size > 0 && (
         <div className="card border-mk-gold/30 flex items-center gap-3 flex-wrap">
           <span className="text-mk-gold font-display text-sm uppercase tracking-wide flex-1">
-            {selected.size} selected
+            {t.bulkEdit.selected.replace('{count}', String(selected.size))}
           </span>
           <button
             onClick={() => setShowEditPanel((v) => !v)}
             className="btn-ghost text-sm py-1.5 px-4"
           >
-            {showEditPanel ? 'Hide edit' : 'Edit'}
+            {showEditPanel ? t.bulkEdit.hideEdit : t.bulkEdit.editBtn}
           </button>
           <button
             onClick={handleDelete}
             disabled={isPending}
             className="px-4 py-1.5 rounded-lg bg-red-700/80 text-white text-sm font-display uppercase tracking-wide hover:bg-red-600 disabled:opacity-50 transition-colors"
           >
-            {bulkDelete.isPending ? 'Deleting...' : 'Delete'}
+            {bulkDelete.isPending ? t.bulkEdit.deleting : t.bulkEdit.deleteBtn}
           </button>
         </div>
       )}
@@ -160,19 +162,19 @@ export function BulkEventManager({ events }: { events: Event[] }) {
       {showEditPanel && selected.size > 0 && (
         <div className="card border-white/20 space-y-4">
           <p className="text-white/50 text-xs uppercase tracking-widest">
-            Only filled fields will be applied to all {selected.size} selected events
+            {t.bulkEdit.instruction.replace('{count}', String(selected.size))}
           </p>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-white/50 text-xs mb-1 uppercase tracking-wide">Start Time</label>
+              <label className="block text-white/50 text-xs mb-1 uppercase tracking-wide">{t.bulkEdit.startTime}</label>
               <input type="time" value={editForm.startTime}
                 onChange={(e) => setEditForm((f) => ({ ...f, startTime: e.target.value }))}
                 className="input-field text-sm py-2 text-left tracking-normal"
               />
             </div>
             <div>
-              <label className="block text-white/50 text-xs mb-1 uppercase tracking-wide">End Time</label>
+              <label className="block text-white/50 text-xs mb-1 uppercase tracking-wide">{t.bulkEdit.endTime}</label>
               <input type="time" value={editForm.endTime}
                 onChange={(e) => setEditForm((f) => ({ ...f, endTime: e.target.value }))}
                 className="input-field text-sm py-2 text-left tracking-normal"
@@ -181,21 +183,21 @@ export function BulkEventManager({ events }: { events: Event[] }) {
           </div>
 
           <div>
-            <label className="block text-white/50 text-xs mb-1 uppercase tracking-wide">Location</label>
-            <input type="text" value={editForm.location} placeholder="Leave blank to keep existing"
+            <label className="block text-white/50 text-xs mb-1 uppercase tracking-wide">{t.bulkEdit.location}</label>
+            <input type="text" value={editForm.location} placeholder={t.bulkEdit.locationPlaceholder}
               onChange={(e) => setEditForm((f) => ({ ...f, location: e.target.value }))}
               className="input-field text-sm py-2 text-left tracking-normal"
             />
           </div>
 
           <div>
-            <label className="block text-white/50 text-xs mb-1 uppercase tracking-wide">Category</label>
+            <label className="block text-white/50 text-xs mb-1 uppercase tracking-wide">{t.bulkEdit.category}</label>
             <div className="flex gap-2">
               {([
-                { v: '' as const, l: 'No change' },
-                { v: 'FLAG' as const, l: '🏴 Flag' },
-                { v: 'TACKLE' as const, l: '🏈 Tackle' },
-                { v: 'CLEAR' as const, l: 'Clear' },
+                { v: '' as const, l: t.bulkEdit.noChange },
+                { v: 'FLAG' as const, l: t.common.flag },
+                { v: 'TACKLE' as const, l: t.common.tackle },
+                { v: 'CLEAR' as const, l: t.bulkEdit.clear },
               ]).map((opt) => (
                 <button key={opt.v} type="button"
                   onClick={() => setEditForm((f) => ({ ...f, category: opt.v }))}
@@ -208,8 +210,8 @@ export function BulkEventManager({ events }: { events: Event[] }) {
           </div>
 
           <div>
-            <label className="block text-white/50 text-xs mb-1 uppercase tracking-wide">Notes</label>
-            <input type="text" value={editForm.notes} placeholder="Leave blank to keep existing"
+            <label className="block text-white/50 text-xs mb-1 uppercase tracking-wide">{t.eventForm.notes}</label>
+            <input type="text" value={editForm.notes} placeholder={t.bulkEdit.locationPlaceholder}
               onChange={(e) => setEditForm((f) => ({ ...f, notes: e.target.value }))}
               className="input-field text-sm py-2 text-left tracking-normal"
             />
@@ -218,7 +220,7 @@ export function BulkEventManager({ events }: { events: Event[] }) {
           {bulkUpdate.error && <p className="text-red-400 text-sm">{bulkUpdate.error.message}</p>}
 
           <button onClick={handleUpdate} disabled={isPending} className="btn-primary w-full">
-            {bulkUpdate.isPending ? 'Saving...' : `Apply to ${selected.size} events`}
+            {bulkUpdate.isPending ? t.common.saving : t.bulkEdit.applyToEvents.replace('{count}', String(selected.size))}
           </button>
         </div>
       )}
@@ -231,14 +233,14 @@ export function BulkEventManager({ events }: { events: Event[] }) {
               className="w-4 h-4 accent-mk-gold"
             />
             <span className="text-white/40 text-xs uppercase tracking-wide">
-              {allSelected ? 'Deselect all' : `Select all (${filtered.length})`}
+              {allSelected ? t.bulkEdit.deselectAll : t.bulkEdit.selectAll.replace('{count}', String(filtered.length))}
             </span>
           </div>
         )}
 
         <div className="space-y-1">
           {filtered.length === 0 && (
-            <p className="text-white/30 text-sm py-4 text-center">No events match the filter.</p>
+            <p className="text-white/30 text-sm py-4 text-center">{t.bulkEdit.noEvents}</p>
           )}
           {filtered.map((event) => {
             const isSelected = selected.has(event.id)
@@ -260,7 +262,7 @@ export function BulkEventManager({ events }: { events: Event[] }) {
                   <div className="flex items-center gap-2">
                     <span className={`text-xs uppercase ${typeColor[event.type]}`}>{event.type}</span>
                     {categoryLabel && <span className="text-xs">{categoryLabel}</span>}
-                    {event.status === 'CANCELLED' && <span className="text-xs text-red-400">Cancelled</span>}
+                    {event.status === 'CANCELLED' && <span className="text-xs text-red-400">{t.common.cancelled}</span>}
                   </div>
                   <p className="text-white/80 text-sm font-medium truncate">{event.title}</p>
                   <p className="text-white/40 text-xs">

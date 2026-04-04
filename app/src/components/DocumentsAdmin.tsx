@@ -3,10 +3,12 @@
 import { useState, useRef } from 'react'
 import { trpc } from '@/lib/trpc'
 import { format } from 'date-fns'
+import { useT } from '@/i18n/client'
 
 const CATEGORIES = ['Playbook', 'Reglement', 'Trainingsplan', 'Sonstiges']
 
 export function DocumentsAdmin() {
+  const t = useT()
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState(CATEGORIES[0])
   const [downloadable, setDownloadable] = useState(false)
@@ -53,10 +55,10 @@ export function DocumentsAdmin() {
     <div className="space-y-6">
       {/* Upload form */}
       <div className="card space-y-3">
-        <h2 className="font-display text-sm uppercase tracking-widest text-white/40">Dokument hochladen</h2>
+        <h2 className="font-display text-sm uppercase tracking-widest text-white/40">{t.documents.upload}</h2>
         <input
           type="text"
-          placeholder="Titel"
+          placeholder={t.documents.titlePlaceholder}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           className="input w-full text-sm"
@@ -81,7 +83,7 @@ export function DocumentsAdmin() {
             onChange={(e) => setDownloadable(e.target.checked)}
             className="rounded"
           />
-          <span className="text-sm text-white/60">Download erlauben</span>
+          <span className="text-sm text-white/60">{t.documents.allowDownload}</span>
         </label>
         {error && <p className="text-red-400 text-xs">{error}</p>}
         <button
@@ -89,15 +91,15 @@ export function DocumentsAdmin() {
           disabled={uploading || !title.trim() || !fileRef.current?.files?.length}
           className="btn-primary text-sm py-2 px-4 disabled:opacity-40"
         >
-          {uploading ? 'Hochladen…' : 'Hochladen'}
+          {uploading ? t.common.loading : t.documents.uploadBtn}
         </button>
       </div>
 
       {/* Document list */}
       <div className="card space-y-3">
-        <h2 className="font-display text-sm uppercase tracking-widest text-white/40">Alle Dokumente</h2>
-        {isLoading && <p className="text-white/30 text-sm">Loading…</p>}
-        {!isLoading && docs.length === 0 && <p className="text-white/30 text-sm">Noch keine Dokumente.</p>}
+        <h2 className="font-display text-sm uppercase tracking-widest text-white/40">{t.documents.allDocuments}</h2>
+        {isLoading && <p className="text-white/30 text-sm">{t.common.loading}</p>}
+        {!isLoading && docs.length === 0 && <p className="text-white/30 text-sm">{t.documents.noDocuments}</p>}
         {docs.map((doc) => (
           <div key={doc.id} className="bg-mk-navy-dark rounded-lg p-3 space-y-1">
             <div className="flex items-start justify-between gap-2">
@@ -106,8 +108,8 @@ export function DocumentsAdmin() {
                 <p className="text-white/40 text-xs">
                   {doc.category} · {format(new Date(doc.uploadedAt), 'd MMM yyyy')}
                   {doc.downloadable
-                    ? <span className="text-green-400 ml-2">↓ downloadable</span>
-                    : <span className="text-yellow-400/70 ml-2">view only</span>
+                    ? <span className="text-green-400 ml-2">↓ {t.documents.downloadable}</span>
+                    : <span className="text-yellow-400/70 ml-2">{t.documents.viewOnly}</span>
                   }
                 </p>
               </div>
@@ -124,7 +126,7 @@ export function DocumentsAdmin() {
                   disabled={remove.isPending}
                   className="text-red-400/70 hover:text-red-400 text-xs disabled:opacity-40"
                 >
-                  Delete
+                  {t.common.delete}
                 </button>
               </div>
             </div>
@@ -134,7 +136,7 @@ export function DocumentsAdmin() {
               rel="noopener noreferrer"
               className="text-mk-gold text-xs underline"
             >
-              Vorschau
+              {t.documents.preview}
             </a>
           </div>
         ))}
