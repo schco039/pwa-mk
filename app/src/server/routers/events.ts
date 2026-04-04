@@ -97,7 +97,7 @@ export const eventsRouter = router({
       return ctx.prisma.event.create({
         data: {
           ...input,
-          date: new Date(input.date),
+          date: new Date(`${input.date}T${input.startTime}:00`),
         },
       })
     }),
@@ -106,15 +106,19 @@ export const eventsRouter = router({
   update: coachProcedure
     .input(z.object({ id: z.string() }).merge(eventUpdateSchema))
     .mutation(async ({ ctx, input }) => {
-      const { id, date, ...rest } = input
+      const { id, date, startTime, ...rest } = input
       const event = await ctx.prisma.event.findUnique({ where: { id } })
       if (!event) throw new TRPCError({ code: 'NOT_FOUND', message: 'Event not found.' })
+
+      const resolvedDate = date ?? event.date.toISOString().split('T')[0]
+      const resolvedTime = startTime ?? event.startTime
 
       return ctx.prisma.event.update({
         where: { id },
         data: {
           ...rest,
-          ...(date ? { date: new Date(date) } : {}),
+          ...(startTime ? { startTime } : {}),
+          ...(date || startTime ? { date: new Date(`${resolvedDate}T${resolvedTime}:00`) } : {}),
         },
       })
     }),
@@ -186,10 +190,10 @@ export const eventsRouter = router({
 
       const created = []
       for (let i = 0; i < input.weeks; i++) {
-        const date = addWeeks(new Date(input.startDate), i)
+        const baseDate = addWeeks(new Date(`${input.startDate}T${template.startTime}:00`), i)
         // Skip if event already exists on this date for this template
         const existing = await ctx.prisma.event.findFirst({
-          where: { templateId: input.templateId, date },
+          where: { templateId: input.templateId, date: baseDate },
         })
         if (existing) continue
 
@@ -197,7 +201,7 @@ export const eventsRouter = router({
           data: {
             type: template.type,
             title: template.title,
-            date,
+            date: baseDate,
             startTime: template.startTime,
             endTime: template.endTime ?? undefined,
             location: template.location ?? undefined,

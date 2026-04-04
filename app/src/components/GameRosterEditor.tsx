@@ -20,16 +20,19 @@ export function GameRosterEditor({ eventId, allPlayers }: Props) {
   const utils = trpc.useUtils()
   const { data: roster = [] } = trpc.roster.get.useQuery({ eventId })
 
-  // Local state: map userId → position
-  const [selected, setSelected] = useState<Map<string, string | null>>(new Map())
+  // Local state: map userId → { position, jerseyNumber }
+  const [selected, setSelected] = useState<Map<string, { position: string | null; jersey: number | null }>>(new Map())
   const [dirty, setDirty] = useState(false)
 
   useEffect(() => {
-    const m = new Map<string, string | null>()
-    for (const r of roster) m.set(r.userId, r.position ?? null)
+    const m = new Map<string, { position: string | null; jersey: number | null }>()
+    for (const r of roster) {
+      const p = allPlayers.find((pl) => pl.id === r.userId)
+      m.set(r.userId, { position: r.position ?? null, jersey: r.jerseyNumber ?? p?.jerseyNumber ?? null })
+    }
     setSelected(m)
     setDirty(false)
-  }, [roster])
+  }, [roster, allPlayers])
 
   const save = trpc.roster.set.useMutation({
     onSuccess: () => {
@@ -42,8 +45,12 @@ export function GameRosterEditor({ eventId, allPlayers }: Props) {
     setDirty(true)
     setSelected((prev) => {
       const next = new Map(prev)
-      if (next.has(playerId)) next.delete(playerId)
-      else next.set(playerId, null)
+      if (next.has(playerId)) {
+        next.delete(playerId)
+      } else {
+        const p = allPlayers.find((pl) => pl.id === playerId)
+        next.set(playerId, { position: null, jersey: p?.jerseyNumber ?? null })
+      }
       return next
     })
   }
@@ -52,16 +59,28 @@ export function GameRosterEditor({ eventId, allPlayers }: Props) {
     setDirty(true)
     setSelected((prev) => {
       const next = new Map(prev)
-      next.set(playerId, pos)
+      const cur = next.get(playerId) ?? { position: null, jersey: null }
+      next.set(playerId, { ...cur, position: pos })
+      return next
+    })
+  }
+
+  function setJersey(playerId: string, jersey: number | null) {
+    setDirty(true)
+    setSelected((prev) => {
+      const next = new Map(prev)
+      const cur = next.get(playerId) ?? { position: null, jersey: null }
+      next.set(playerId, { ...cur, jersey })
       return next
     })
   }
 
   function handleSave() {
-    const entries = [...selected.entries()].map(([userId, position]) => {
-      const p = allPlayers.find((pl) => pl.id === userId)
-      return { userId, position: position ?? undefined, jerseyNumber: p?.jerseyNumber ?? undefined }
-    })
+    const entries = [...selected.entries()].map(([userId, { position, jersey }]) => ({
+      userId,
+      position: position ?? undefined,
+      jerseyNumber: jersey ?? undefined,
+    }))
     save.mutate({ eventId, entries })
   }
 
@@ -81,7 +100,9 @@ export function GameRosterEditor({ eventId, allPlayers }: Props) {
       <div className="space-y-1 max-h-96 overflow-y-auto">
         {allPlayers.map((p) => {
           const isOn = selected.has(p.id)
-          const pos = selected.get(p.id) ?? null
+          const entry = selected.get(p.id)
+          const pos = entry?.position ?? null
+          const jersey = entry?.jersey ?? p.jerseyNumber ?? null
           return (
             <div
               key={p.id}
@@ -95,9 +116,21 @@ export function GameRosterEditor({ eventId, allPlayers }: Props) {
                 onChange={() => toggle(p.id)}
                 className="rounded accent-mk-gold"
               />
-              <span className="text-white/30 w-6 text-right text-xs flex-shrink-0">
-                {p.jerseyNumber ? `#${p.jerseyNumber}` : '—'}
-              </span>
+              {isOn ? (
+                <input
+                  type="number"
+                  min={1}
+                  max={99}
+                  value={jersey ?? ''}
+                  onChange={(e) => setJersey(p.id, e.target.value ? parseInt(e.target.value) : null)}
+                  placeholder="#"
+                  className="w-10 bg-mk-navy-dark text-white/60 text-xs rounded px-1.5 py-1 border border-white/20 text-center flex-shrink-0"
+                />
+              ) : (
+                <span className="text-white/30 w-10 text-right text-xs flex-shrink-0">
+                  {p.jerseyNumber ? `#${p.jerseyNumber}` : '—'}
+                </span>
+              )}
               <span className="text-sm text-white/80 flex-1 min-w-0 truncate">{p.name}</span>
               {isOn && (
                 <select

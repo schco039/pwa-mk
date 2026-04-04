@@ -44,7 +44,7 @@ export default async function CoachTrainingsPage() {
     category: t.category,
     myRsvp: (t.rsvps[0]?.status ?? null) as 'YES' | 'NO' | 'MAYBE' | null,
     attendanceCount: t._count.attendances,
-    isPast: t.date < now,
+    isPast: new Date(`${t.date.toISOString().split('T')[0]}T${t.endTime ?? t.startTime}:00`) < now,
     hasAttendance: t._count.attendances > 0,
   }))
 

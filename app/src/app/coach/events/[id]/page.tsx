@@ -12,7 +12,7 @@ import { GameRosterEditor } from '@/components/GameRosterEditor'
 import { GameRosterView } from '@/components/GameRosterView'
 import { MvpVoting } from '@/components/MvpVoting'
 import { EventStatus } from '@prisma/client'
-import { format, isPast } from 'date-fns'
+import { format } from 'date-fns'
 
 export default async function CoachEventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -52,7 +52,9 @@ export default async function CoachEventDetailPage({ params }: { params: Promise
   const maybe = event.rsvps.filter((r) => r.status === 'MAYBE' && r.user.role === 'PLAYER')
   const pending = allPlayers.filter((p) => !rsvpMap[p.id])
 
-  const eventPast = isPast(event.date)
+  const eventEndTime = event.endTime ?? event.startTime
+  const eventDateStr = event.date.toISOString().split('T')[0]
+  const eventPast = new Date(`${eventDateStr}T${eventEndTime}:00`) < new Date()
   const isGame = event.type === 'GAME'
 
   // Check if current user is on the roster (for MVP voting eligibility)
@@ -97,8 +99,8 @@ export default async function CoachEventDetailPage({ params }: { params: Promise
           </div>
         </div>
 
-        {/* Coach availability (only for TRAINING, visible to COMITE) */}
-        {event.type === 'TRAINING' && coachRsvps.length > 0 && (
+        {/* Coach availability — visible to COMITE and COACH */}
+        {coachRsvps.length > 0 && (
           <div className="card">
             <h2 className="font-display text-sm font-semibold text-white/40 mb-3 uppercase tracking-wide">Trainer Verfügbarkeit</h2>
             <div className="flex flex-wrap gap-2">

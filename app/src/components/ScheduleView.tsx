@@ -68,7 +68,9 @@ function RsvpButtons({ event }: { event: ScheduleEvent }) {
 
 function EventCard({ event, isCoach }: { event: ScheduleEvent; isCoach: boolean }) {
   const date = new Date(event.date)
-  const isPast = date < new Date()
+  const eventEndTime = event.endTime ?? event.startTime
+  const dateStr = event.date.split('T')[0]
+  const isPast = new Date(`${dateStr}T${eventEndTime}:00`) < new Date()
   const isCancelled = event.status === 'CANCELLED'
 
   const displayTitle = event.type === 'GAME' && event.opponent
