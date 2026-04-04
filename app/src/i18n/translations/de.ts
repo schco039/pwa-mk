@@ -287,4 +287,10 @@ export const de: Translations = {
     deselectAll: 'Alle abwählen',
     noEvents: 'Keine Events entsprechen dem Filter.',
   },
+  install: {
+    title: 'App installieren',
+    description: 'Füge Mamer Knights zu deinem Startbildschirm hinzu für das beste Erlebnis.',
+    button: 'Installieren',
+    dismiss: 'Nicht jetzt',
+  },
 }

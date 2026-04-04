@@ -287,4 +287,10 @@ export const fr: Translations = {
     deselectAll: 'Tout désélectionner',
     noEvents: 'Aucun événement ne correspond au filtre.',
   },
+  install: {
+    title: 'Installer l\'appli',
+    description: 'Ajoutez Mamer Knights à votre écran d\'accueil pour une meilleure expérience.',
+    button: 'Installer',
+    dismiss: 'Pas maintenant',
+  },
 }

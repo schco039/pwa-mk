@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Oswald, Montserrat } from 'next/font/google'
 import { TrpcProvider } from '@/components/TrpcProvider'
 import { ServiceWorkerRegistrar } from '@/components/ServiceWorkerRegistrar'
+import { InstallPrompt } from '@/components/InstallPrompt'
 import { I18nProvider } from '@/i18n/client'
 import { getLocale } from '@/i18n'
 import './globals.css'
@@ -39,6 +40,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <TrpcProvider>
           <I18nProvider locale={locale}>
             <ServiceWorkerRegistrar />
+            <InstallPrompt />
             {children}
           </I18nProvider>
         </TrpcProvider>

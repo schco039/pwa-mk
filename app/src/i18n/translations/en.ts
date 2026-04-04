@@ -285,6 +285,12 @@ export const en = {
     deselectAll: 'Deselect all',
     noEvents: 'No events match the filter.',
   },
+  install: {
+    title: 'Install App',
+    description: 'Add Mamer Knights to your home screen for the best experience.',
+    button: 'Install',
+    dismiss: 'Not now',
+  },
 } as const
 
 // Use a deep string type so translations in other languages aren't constrained to English literal types
