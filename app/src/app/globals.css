@@ -47,4 +47,18 @@
   .card {
     @apply bg-mk-navy rounded-xl border border-white/10 p-6;
   }
+
+  /* Unified input + select styling */
+  .input {
+    @apply bg-mk-navy-dark border border-white/20 text-white rounded-lg px-3 py-2
+           placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-mk-gold focus:border-transparent
+           transition appearance-none;
+  }
+
+  select.input {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 2rem;
+  }
 }
